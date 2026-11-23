@@ -41,7 +41,10 @@ namespace ContinuumNS
         /// </summary>
         public void UpdateMetTable()
         {
-            string[] selectedMets = selMetNamesCommaStr.Split(',');
+            string[] selectedMets = new string[0];
+            
+            if (selMetNamesCommaStr != null)
+                selectedMets= selMetNamesCommaStr.Split(',');
 
             for (int m = 0; m < metList.ThisCount; m++)
             {
@@ -85,6 +88,12 @@ namespace ContinuumNS
                 goodToGo = true;
                 Close();
             }
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            goodToGo = false;
+            Close();
         }
     }
 }

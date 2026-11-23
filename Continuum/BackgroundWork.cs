@@ -996,7 +996,7 @@ namespace ContinuumNS
             int numMets = metList.ThisCount;
             int numRad = radiiList.ThisCount;
 
-            double[] overallWindRose = metList.GetAvgWindRose(thisInst.modeledHeight, Met.TOD.All, Met.Season.All);
+            double[] overallWindRose = metList.GetAvgWindRose(thisInst.modeledHeight, Met.TOD.All, Met.Season.All, false);
 
             if (overallWindRose != null)
             {
@@ -1103,7 +1103,9 @@ namespace ContinuumNS
             Wake_Model wakeModel = theArgs.thisWakeModel;
             NodeCollection nodeList = new NodeCollection();
             TurbineCollection turbList = thisInst.turbineList;
-            
+            bool isLT_Est = false;
+            if (thisInst.metList.allMCPd)
+                isLT_Est = true;
             int numTurbs = turbList.TurbineCount;
             //   int numWD = thisInst.metList.numWD;
 
@@ -1190,7 +1192,7 @@ namespace ContinuumNS
 
                     if (turbine.AvgWSEst_Count == 0)
                     {
-                        double[] windRose = thisInst.metList.GetInterpolatedWindRose(thisInst.metList.GetMetsUsed(), turbine.UTMX, turbine.UTMY, Met.TOD.All, Met.Season.All, thisInst.modeledHeight);
+                        double[] windRose = thisInst.metList.GetInterpolatedWindRose(thisInst.metList.GetMetsUsed(), turbine.UTMX, turbine.UTMY, Met.TOD.All, Met.Season.All, thisInst.modeledHeight, isLT_Est);
                         Model[] models = thisInst.modelList.GetAllModels(thisInst, thisInst.metList.GetMetsUsed());
                         turbine.DoTurbineCalcs(thisInst, models);
                         turbine.GenerateAvgWSFromTABs(thisInst, models, windRose, false); // calculates avg WS est at turb and uncertainty of WS   
@@ -1395,7 +1397,9 @@ namespace ContinuumNS
             Continuum thisInst = theArgs.thisInst;
             TopoInfo topo = thisInst.topo;
             Map thisMap = theArgs.thisMap;
-            
+            bool isLT_Est = false;
+            if (thisInst.metList.allMCPd)
+                isLT_Est = true;
             string MCP_Method = theArgs.MCP_Method;
             MetCollection metList = thisInst.metList;
             NodeCollection nodeList = new NodeCollection();
@@ -1544,7 +1548,7 @@ namespace ContinuumNS
 
                    
                         if (thisMapNode.windRose == null)                      
-                            thisMapNode.windRose = metList.GetInterpolatedWindRose(metList.GetMetsUsed(), thisMapNode.UTMX, thisMapNode.UTMY, Met.TOD.All, Met.Season.All, thisInst.modeledHeight);
+                            thisMapNode.windRose = metList.GetInterpolatedWindRose(metList.GetMetsUsed(), thisMapNode.UTMX, thisMapNode.UTMY, Met.TOD.All, Met.Season.All, thisInst.modeledHeight, isLT_Est);
                                            
                         if (thisMap.useFlowSep == true) thisMap.GetFlowSepNodes(ref thisMapNode, thisInst);
                    
@@ -3591,12 +3595,16 @@ namespace ContinuumNS
             Vars_for_WRG_file theArgs = (Vars_for_WRG_file)(e.Argument);
             Continuum thisInst = theArgs.thisInst;
             MetCollection metList = thisInst.metList;
+            
             MapCollection mapList = thisInst.mapList;
             string mapName = theArgs.mapName;
             double density = theArgs.density;
             string outputFile = theArgs.outputFile;
             TopoInfo topo = thisInst.topo;
-            double[] windRose = metList.GetAvgWindRose(thisInst.modeledHeight, Met.TOD.All, Met.Season.All);
+            bool isLT_Est = false;
+            if (metList.allMCPd)
+                isLT_Est = true;
+            double[] windRose = metList.GetAvgWindRose(thisInst.modeledHeight, Met.TOD.All, Met.Season.All, isLT_Est);
             Map thisMap = new Map();
 
             if (mapList.ThisCount > 0)
@@ -3635,7 +3643,7 @@ namespace ContinuumNS
             }
 
             StreamWriter sw = new StreamWriter(outputFile);
-
+           
             double weibull_A_10;
             double weibull_k_100;
 
@@ -3711,11 +3719,11 @@ namespace ContinuumNS
                     int numWS = metList.numWS;
                     int numWD = metList.numWD;
                     double[,] thisSectDist = new double[numWD, numWS];
-                    double[] thisWindRose = metList.GetInterpolatedWindRose(metsUsed, thisX, thisY, Met.TOD.All, Met.Season.All, thisInst.modeledHeight);
+                    double[] thisWindRose = metList.GetInterpolatedWindRose(metsUsed, thisX, thisY, Met.TOD.All, Met.Season.All, thisInst.modeledHeight, isLT_Est);
 
                     for (int WD = 0; WD <= numWD - 1; WD++)
                     {
-                        double[] This_WS_Dist = metList.CalcWS_DistForTurbOrMap(metsUsed, thisMap.sectorParamToMap[xind, yind, WD], WD, Met.TOD.All, Met.Season.All, thisInst.modeledHeight);
+                        double[] This_WS_Dist = metList.CalcWS_DistForTurbOrMap(metsUsed, thisMap.sectorParamToMap[xind, yind, WD], WD, Met.TOD.All, Met.Season.All, thisInst.modeledHeight, isLT_Est);
 
                         for (int WS = 0; WS <= numWS - 1; WS++)
                             thisSectDist[WD, WS] = This_WS_Dist[WS] * 1000;
@@ -4656,7 +4664,8 @@ namespace ContinuumNS
 
             int numYearlyHits = siteSuit.iceThrowsPerIceDay * siteSuit.numIceDaysPerYear;
             int totalIceHits = numYearlyHits * thisInst.turbineList.TurbineCount; // Only used to calculate progress for progress bar
-            int totalCount = 0;                        
+            int totalCount = 0;
+            bool isLT_Est = thisInst.metList.allMCPd;
 
             for (int y = 0; y < siteSuit.numYearsToModel; y++)
             {
@@ -4677,7 +4686,7 @@ namespace ContinuumNS
                     if (thisAvgEst.freeStream.sectorWS_Dist == null) // Use closest met site instead
                     {
                         Met thisMet = thisInst.metList.GetClosestMet(thisTurbine.UTMX, thisTurbine.UTMY);
-                        Met.WSWD_Dist thisDist = thisMet.GetWS_WD_Dist(thisInst.modeledHeight, Met.TOD.All, Met.Season.All);
+                        Met.WSWD_Dist thisDist = thisMet.GetWS_WD_Dist(thisInst.modeledHeight, Met.TOD.All, Met.Season.All, isLT_Est);
                         sectorDists = thisDist.sectorWS_Dist;
                         windRose = thisDist.windRose;
                     }

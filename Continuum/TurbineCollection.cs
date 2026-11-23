@@ -484,7 +484,7 @@ namespace ContinuumNS
             if (thisInst.metList.numWD == 0) return;
             int numWD = thisInst.metList.numWD;
             int numWS = thisInst.metList.numWS;
-                      
+            bool useLT_Est = thisInst.metList.allMCPd;
             string[] metsUsed = thisInst.metList.GetMetsUsed();    
 
             for (int i = 0; i < PowerCurveCount; i++)
@@ -513,21 +513,21 @@ namespace ContinuumNS
 
                         for (int WD_Ind = 0; WD_Ind < numWD; WD_Ind++) {
                             double P90_WS = avgEst.freeStream.sectorWS[WD_Ind] - avgEst.uncert * 1.28f;
-                            double[] WS_Dist = thisInst.metList.CalcWS_DistForTurbOrMap(metsUsed, P90_WS, WD_Ind, Met.TOD.All, Met.Season.All, thisInst.modeledHeight);
+                            double[] WS_Dist = thisInst.metList.CalcWS_DistForTurbOrMap(metsUsed, P90_WS, WD_Ind, Met.TOD.All, Met.Season.All, thisInst.modeledHeight, useLT_Est);
                             for (int WS_ind = 0; WS_ind <= numWS - 1; WS_ind++)
                                 sectorDist[WD_Ind, WS_ind] = WS_Dist[WS_ind];
                         }
 
-                        double[] P90_Dist = thisInst.metList.CalcOverallWS_Dist(sectorDist, thisInst.metList.GetAvgWindRose(thisInst.modeledHeight, Met.TOD.All, Met.Season.All));
+                        double[] P90_Dist = thisInst.metList.CalcOverallWS_Dist(sectorDist, thisInst.metList.GetAvgWindRose(thisInst.modeledHeight, Met.TOD.All, Met.Season.All, useLT_Est));
 
                         for (int WD_Ind = 0; WD_Ind < numWD; WD_Ind++) {
                             double P99_WS = avgEst.freeStream.sectorWS[WD_Ind] - avgEst.uncert * 2.33f;
-                            double[] WS_Dist = thisInst.metList.CalcWS_DistForTurbOrMap(metsUsed, P99_WS, WD_Ind, Met.TOD.All, Met.Season.All, thisInst.modeledHeight);
+                            double[] WS_Dist = thisInst.metList.CalcWS_DistForTurbOrMap(metsUsed, P99_WS, WD_Ind, Met.TOD.All, Met.Season.All, thisInst.modeledHeight, useLT_Est);
                             for (int WS_ind = 0; WS_ind <= numWS - 1; WS_ind++)
                                 sectorDist[WD_Ind, WS_ind] = WS_Dist[WS_ind];
                         }
 
-                        double[] P99_Dist = thisInst.metList.CalcOverallWS_Dist(sectorDist, thisInst.metList.GetAvgWindRose(thisInst.modeledHeight, Met.TOD.All, Met.Season.All));
+                        double[] P99_Dist = thisInst.metList.CalcOverallWS_Dist(sectorDist, thisInst.metList.GetAvgWindRose(thisInst.modeledHeight, Met.TOD.All, Met.Season.All, useLT_Est));
 
                         double P90_AEP = CalcAndReturnGrossAEP(P90_Dist, thisInst.metList, powerCurves[i].name);
                         double P99_AEP = CalcAndReturnGrossAEP(P99_Dist, thisInst.metList, powerCurves[i].name);
@@ -536,7 +536,7 @@ namespace ContinuumNS
                         for (int WD_Ind = 0; WD_Ind <= numWD - 1; WD_Ind++)
                         {
                             double[] ThisDist = new double[numWS];
-                            double[] windRose = thisInst.metList.GetAvgWindRose(thisInst.modeledHeight, Met.TOD.All, Met.Season.All);
+                            double[] windRose = thisInst.metList.GetAvgWindRose(thisInst.modeledHeight, Met.TOD.All, Met.Season.All, useLT_Est);
                             for (int WS_ind = 0; WS_ind < numWS; WS_ind++)
                                 ThisDist[WS_ind] = avgEst.freeStream.sectorWS_Dist[WD_Ind, WS_ind];
                             P50_AEP_Sect[WD_Ind] = CalcAndReturnGrossAEP(ThisDist, thisInst.metList, powerCurves[i].name) * windRose[WD_Ind];

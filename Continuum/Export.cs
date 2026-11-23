@@ -230,6 +230,7 @@ namespace ContinuumNS
             StreamWriter sw;
 
             bool gotSR = thisInst.topo.gotSR;
+            bool usingLT_Est = thisInst.metList.allMCPd;
 
             // Figure out if end is a met or a turbine
             bool endIsTurb = true;
@@ -321,8 +322,8 @@ namespace ContinuumNS
                     }
 
                     sw.Write(met1.name + "," + Math.Round(met1.UTMX, 0).ToString() + "," + Math.Round(met1.UTMY, 0).ToString() + "," + Math.Round(met1.elev, 1).ToString() + ",");
-                    Met.WSWD_Dist met1Dist = met1.GetWS_WD_Dist(thisInst.modeledHeight, thisTOD, thisSeason);
-                    Met.WSWD_Dist met2Dist = met2.GetWS_WD_Dist(thisInst.modeledHeight, thisTOD, thisSeason);
+                    Met.WSWD_Dist met1Dist = met1.GetWS_WD_Dist(thisInst.modeledHeight, thisTOD, thisSeason, usingLT_Est);
+                    Met.WSWD_Dist met2Dist = met2.GetWS_WD_Dist(thisInst.modeledHeight, thisTOD, thisSeason, usingLT_Est);
 
                     // Output Met 1 values
                     if (WD_Ind == numWD)
@@ -374,7 +375,7 @@ namespace ContinuumNS
 
                         if (WD_Ind == numWD)
                         {
-                            double[] thisWindRose = thisInst.metList.GetInterpolatedWindRose(thisInst.metList.GetMetsUsed(), this_Node.UTMX, this_Node.UTMY, thisTOD, thisSeason, thisInst.modeledHeight);
+                            double[] thisWindRose = thisInst.metList.GetInterpolatedWindRose(thisInst.metList.GetMetsUsed(), this_Node.UTMX, this_Node.UTMY, thisTOD, thisSeason, thisInst.modeledHeight, usingLT_Est);
                             sw.Write(Math.Round(this_Node.gridStats.GetOverallP10(thisWindRose, radiusIndex, "UW"), 3) + ",");
                             sw.Write(Math.Round(this_Node.gridStats.GetOverallP10(thisWindRose, radiusIndex, "DW"), 3) + ",");
                             sw.Write(Math.Round(this_Node.expo[radiusIndex].GetOverallValue(thisWindRose, "Expo", "UW"), 3) + ",");
@@ -458,7 +459,7 @@ namespace ContinuumNS
                 {
                     // Met to turb      
                     Met thisMet = thisInst.metList.GetMet(startStr);
-                    Met.WSWD_Dist thisDist = thisMet.GetWS_WD_Dist(thisInst.modeledHeight, thisTOD, thisSeason);
+                    Met.WSWD_Dist thisDist = thisMet.GetWS_WD_Dist(thisInst.modeledHeight, thisTOD, thisSeason, usingLT_Est);
                     Turbine thisTurb = thisInst.turbineList.GetTurbine(endStr);
                     Turbine.WS_Ests thisWS_Est = thisTurb.GetWS_Est(radius, thisMet.name, thisModel[radiusIndex]);
 
@@ -506,7 +507,7 @@ namespace ContinuumNS
                         sw.Write("Node " + (j + 1).ToString() + ",");
 
                         Nodes this_Node = thisWS_Est.pathOfNodes[j];
-                        double[] thisWindRose = thisInst.metList.GetInterpolatedWindRose(thisInst.metList.GetMetsUsed(), this_Node.UTMX, this_Node.UTMY, thisTOD, thisSeason, thisModel[radiusIndex].height);
+                        double[] thisWindRose = thisInst.metList.GetInterpolatedWindRose(thisInst.metList.GetMetsUsed(), this_Node.UTMX, this_Node.UTMY, thisTOD, thisSeason, thisModel[radiusIndex].height, usingLT_Est);
                         sw.Write(Math.Round(this_Node.UTMX, 0).ToString() + "," + Math.Round(this_Node.UTMY, 0).ToString() + "," + Math.Round(this_Node.elev, 1).ToString() + ",");
 
                         if (WD_Ind == numWD)
@@ -859,6 +860,7 @@ namespace ContinuumNS
                 int numMets = theseMets.Count();
                 int numTurbines = theseTurbines.Count();
                 bool haveAEP = false;
+                bool usingLT_Est = thisInst.metList.allMCPd;
                 
                 Export_Degs_or_UTM thisExport = new Export_Degs_or_UTM();
                 thisExport.cbo_Lats_UTMs.SelectedIndex = 0;
@@ -925,7 +927,7 @@ namespace ContinuumNS
                         for (int i = 0; i < numMets; i++)
                         {
                             sw.Write(theseMets[i].name + ",");
-                            Met.WSWD_Dist thisDist = theseMets[i].GetWS_WD_Dist(thisInst.modeledHeight, Met.TOD.All, Met.Season.All);
+                            Met.WSWD_Dist thisDist = theseMets[i].GetWS_WD_Dist(thisInst.modeledHeight, Met.TOD.All, Met.Season.All, usingLT_Est);
 
                             if (latsOrUTMs == 1)
                             {
@@ -1159,6 +1161,7 @@ namespace ContinuumNS
                 Met[] theseMets = new Met[0];
                 Turbine[] theseTurbines = new Turbine[0];
                 Wake_Model thisWakeModel = null;
+                bool usingLT_Est = thisInst.metList.allMCPd;
 
                 if (tabName == "Gross")
                 {
@@ -1225,7 +1228,7 @@ namespace ContinuumNS
                         for (int i = 0; i < numMets; i++)
                         {
                             sw.Write(theseMets[i].name + ",");
-                            Met.WSWD_Dist thisDist = theseMets[i].GetWS_WD_Dist(thisInst.modeledHeight, Met.TOD.All, Met.Season.All);
+                            Met.WSWD_Dist thisDist = theseMets[i].GetWS_WD_Dist(thisInst.modeledHeight, Met.TOD.All, Met.Season.All, usingLT_Est);
 
                             if (latsOrUTMs == 1)
                             {
@@ -1308,7 +1311,7 @@ namespace ContinuumNS
                         for (int i = 0; i < numMets; i++)
                         {
                             sw.Write(theseMets[i].name + ",");
-                            Met.WSWD_Dist thisDist = theseMets[i].GetWS_WD_Dist(thisInst.modeledHeight, Met.TOD.All, Met.Season.All);
+                            Met.WSWD_Dist thisDist = theseMets[i].GetWS_WD_Dist(thisInst.modeledHeight, Met.TOD.All, Met.Season.All, usingLT_Est);
 
                             if (latsOrUTMs == 1)
                             {
@@ -1391,7 +1394,7 @@ namespace ContinuumNS
                         for (int i = 0; i < numMets; i++)
                         {
                             sw.Write(theseMets[i].name + ",");
-                            Met.WSWD_Dist thisDist = theseMets[i].GetWS_WD_Dist(thisInst.modeledHeight, Met.TOD.All, Met.Season.All);
+                            Met.WSWD_Dist thisDist = theseMets[i].GetWS_WD_Dist(thisInst.modeledHeight, Met.TOD.All, Met.Season.All, usingLT_Est);
 
                             if (latsOrUTMs == 1)
                             {
@@ -1660,6 +1663,7 @@ namespace ContinuumNS
             Turbine[] theseTurbines = thisInst.GetCheckedTurbs("Gross");
             int numTurbines = theseTurbines.Count();
             int numMets = theseMets.Count();
+            bool usingLT_Est = thisInst.metList.allMCPd;
 
             if (numMets + numTurbines == 0)
                 return;                        
@@ -1707,7 +1711,7 @@ namespace ContinuumNS
 
                     for (int j = 0; j <= numMets - 1; j++)
                     {
-                        Met.WSWD_Dist thisDist = theseMets[j].GetWS_WD_Dist(thisInst.modeledHeight, Met.TOD.All, Met.Season.All);
+                        Met.WSWD_Dist thisDist = theseMets[j].GetWS_WD_Dist(thisInst.modeledHeight, Met.TOD.All, Met.Season.All, usingLT_Est);
                         sw.Write(thisDist.WS_Dist[i] + ",");
                     }
 
@@ -1729,6 +1733,7 @@ namespace ContinuumNS
         {            
             Met[] theseMets = thisInst.GetCheckedMets("Gross");
             Turbine[] theseTurbines = thisInst.GetCheckedTurbs("Gross");
+            bool usingLT_Est = thisInst.metList.allMCPd;
 
             int numTurbines = theseTurbines.Count();
             int numMets = theseMets.Count();
@@ -1768,7 +1773,7 @@ namespace ContinuumNS
                 for (int i = 0; i < numMets; i++)
                 {
                     sw.WriteLine(theseMets[i].name);
-                    Met.WSWD_Dist thisDist = theseMets[i].GetWS_WD_Dist(thisInst.modeledHeight, Met.TOD.All, Met.Season.All);
+                    Met.WSWD_Dist thisDist = theseMets[i].GetWS_WD_Dist(thisInst.modeledHeight, Met.TOD.All, Met.Season.All, usingLT_Est);
 
                     sw.Write("WS [m/s],");
                     for (int WD = 0; WD < numWD; WD++)
@@ -1989,6 +1994,7 @@ namespace ContinuumNS
             string Site_name = "";
             Met thisMet = null;
             Turbine thisTurbine = null;
+            bool usingLT_Est = thisInst.metList.allMCPd;
 
             if (mets != null)
                 numSites = mets.Length;
@@ -2044,7 +2050,7 @@ namespace ContinuumNS
                     {
                         if (thisMet != null)
                         {
-                            Met.WSWD_Dist thisDist = thisMet.GetWS_WD_Dist(thisInst.modeledHeight, Met.TOD.All, Met.Season.All);
+                            Met.WSWD_Dist thisDist = thisMet.GetWS_WD_Dist(thisInst.modeledHeight, Met.TOD.All, Met.Season.All, usingLT_Est);
                             sw.Write(Math.Round(thisMet.expo[rad_ind].GetOverallValue(thisDist.windRose, "Expo", "UW"), 4).ToString() + ", ");
                             sw.Write(Math.Round(thisMet.expo[rad_ind].GetOverallValue(thisDist.windRose, "Expo", "DW"), 4).ToString() + ", ");
                         }
@@ -2055,7 +2061,7 @@ namespace ContinuumNS
                             if (thisTurbine.AvgWSEst_Count > 0)
                                 avgEst = thisTurbine.avgWS_Est[0];
                             else
-                                avgEst.freeStream.windRose = thisInst.metList.GetInterpolatedWindRose(thisInst.metList.GetMetsUsed(), thisTurbine.UTMX, thisTurbine.UTMY, Met.TOD.All, Met.Season.All, thisInst.modeledHeight);
+                                avgEst.freeStream.windRose = thisInst.metList.GetInterpolatedWindRose(thisInst.metList.GetMetsUsed(), thisTurbine.UTMX, thisTurbine.UTMY, Met.TOD.All, Met.Season.All, thisInst.modeledHeight, usingLT_Est);
 
                             sw.Write(Math.Round(thisTurbine.expo[rad_ind].GetOverallValue(avgEst.freeStream.windRose, "Expo", "UW"), 4).ToString() + ", ");
                             sw.Write(Math.Round(thisTurbine.expo[rad_ind].GetOverallValue(avgEst.freeStream.windRose, "Expo", "DW"), 4).ToString() + ", ");
@@ -2065,7 +2071,7 @@ namespace ContinuumNS
                     {
                         if (thisMet != null)
                         {
-                            Met.WSWD_Dist thisDist = thisMet.GetWS_WD_Dist(thisInst.modeledHeight, Met.TOD.All, Met.Season.All);
+                            Met.WSWD_Dist thisDist = thisMet.GetWS_WD_Dist(thisInst.modeledHeight, Met.TOD.All, Met.Season.All, usingLT_Est);
                             sw.Write(Math.Round(thisMet.expo[rad_ind].GetOverallValue(thisDist.windRose, "SR", "UW"), 4).ToString() + ", ");
                             sw.Write(Math.Round(thisMet.expo[rad_ind].GetOverallValue(thisDist.windRose, "SR", "DW"), 4).ToString() + ", ");
                         }
@@ -2076,7 +2082,7 @@ namespace ContinuumNS
                             if (thisTurbine.AvgWSEst_Count > 0)
                                 avgEst = thisTurbine.avgWS_Est[0];
                             else
-                                avgEst.freeStream.windRose = thisInst.metList.GetInterpolatedWindRose(thisInst.metList.GetMetsUsed(), thisTurbine.UTMX, thisTurbine.UTMY, Met.TOD.All, Met.Season.All, thisInst.modeledHeight);
+                                avgEst.freeStream.windRose = thisInst.metList.GetInterpolatedWindRose(thisInst.metList.GetMetsUsed(), thisTurbine.UTMX, thisTurbine.UTMY, Met.TOD.All, Met.Season.All, thisInst.modeledHeight, usingLT_Est);
 
                             sw.Write(Math.Round(thisTurbine.expo[rad_ind].GetOverallValue(avgEst.freeStream.windRose, "SR", "UW"), 4).ToString() + ", ");
                             sw.Write(Math.Round(thisTurbine.expo[rad_ind].GetOverallValue(avgEst.freeStream.windRose, "SR", "DW"), 4).ToString() + ", ");
@@ -2086,7 +2092,7 @@ namespace ContinuumNS
                     {
                         if (thisMet != null)
                         {
-                            Met.WSWD_Dist thisDist = thisMet.GetWS_WD_Dist(thisInst.modeledHeight, Met.TOD.All, Met.Season.All);
+                            Met.WSWD_Dist thisDist = thisMet.GetWS_WD_Dist(thisInst.modeledHeight, Met.TOD.All, Met.Season.All, usingLT_Est);
                             sw.Write(Math.Round(thisMet.expo[rad_ind].GetOverallValue(thisDist.windRose, "DH", "UW"), 4).ToString() + ", ");
                             sw.Write(Math.Round(thisMet.expo[rad_ind].GetOverallValue(thisDist.windRose, "DH", "DW"), 4).ToString() + ", ");
                         }
@@ -2097,7 +2103,7 @@ namespace ContinuumNS
                             if (thisTurbine.AvgWSEst_Count > 0)
                                 avgEst = thisTurbine.avgWS_Est[0];
                             else
-                                avgEst.freeStream.windRose = thisInst.metList.GetInterpolatedWindRose(thisInst.metList.GetMetsUsed(), thisTurbine.UTMX, thisTurbine.UTMY, Met.TOD.All, Met.Season.All, thisInst.modeledHeight);
+                                avgEst.freeStream.windRose = thisInst.metList.GetInterpolatedWindRose(thisInst.metList.GetMetsUsed(), thisTurbine.UTMX, thisTurbine.UTMY, Met.TOD.All, Met.Season.All, thisInst.modeledHeight, usingLT_Est);
 
                             sw.Write(Math.Round(thisTurbine.expo[rad_ind].GetOverallValue(avgEst.freeStream.windRose, "DH", "UW"), 4).ToString() + ", ");
                             sw.Write(Math.Round(thisTurbine.expo[rad_ind].GetOverallValue(avgEst.freeStream.windRose, "DH", "DW"), 4).ToString() + ", ");
@@ -2812,7 +2818,7 @@ namespace ContinuumNS
 
                     if (useMeasuredRose == true)
                     {
-                        Met.WSWD_Dist measDist = thisMet.GetWS_WD_Dist(height, Met.TOD.All, Met.Season.All);
+                        Met.WSWD_Dist measDist = thisMet.GetWS_WD_Dist(height, Met.TOD.All, Met.Season.All, false);
                         for (int i = 0; i < numTAB_Bins; i++)
                             windRose[i] = measDist.windRose[i];
                     }
@@ -2857,51 +2863,40 @@ namespace ContinuumNS
 
                     if (useDebiasedWS)
                     {
-                        // Shift the WS distribution to account for bias in the MCP'd WS estimates
+                        // Shift the WS distribution to account for bias in the MCP'd WS estimates                       
+
                         double debiasedWS = thisMCP.debiasData.debiasedWS;
                         double biasedWS = thisAvgWS;
-                        double wsShift = (debiasedWS - biasedWS) / 2.0;
-                        double wsDiff = debiasedWS - biasedWS;
-                        double wsDiffTolerance = 0.01;
+                        double wsShift = debiasedWS - biasedWS;    
                         double[,] originalDist = (double[,])WSWD_Dist.Clone();
 
-                        while (Math.Abs(wsDiff) > wsDiffTolerance)
+                        int numWSBins = originalDist.GetLength(0);
+                        int numWDBins = originalDist.GetLength(1);                                                                                           
+
+                        // Shift each source bin, distributing its probability between adjacent destination bins. This conserves probability mass.
+                        for (int wd = 0; wd < numWDBins; wd++)
                         {
-                            // Interpolate the WS distribution to shift it by wsShift
-                            for (int WD_Ind = 0; WD_Ind < numTAB_Bins; WD_Ind++)
-                            {
-                                for (int WS_Ind = 0; WS_Ind < thisInst.metList.numWS - 1; WS_Ind++)
-                                {
-                                    double sourceIndex = WS_Ind - wsShift / wsBinWidth;
-                                    int lowerIndex = (int)Math.Floor(sourceIndex);
-                                    double fraction = sourceIndex - lowerIndex;
+                            double colSum = 0.0;
 
-                                    if (lowerIndex < 0 || lowerIndex >= numTAB_wsBins - 1)                                    
-                                        WSWD_Dist[WS_Ind, WD_Ind] = 0;                                    
-                                    else                                    
-                                        WSWD_Dist[WS_Ind, WD_Ind] = originalDist[lowerIndex, WD_Ind] * (1 - fraction) + originalDist[lowerIndex + 1, WD_Ind] * fraction;                                    
-                                }
+                            for (int ws = 0; ws < numWSBins; ws++)
+                            {
+                                double sourceIndex = ws - wsShift / wsBinWidth;
+                                int lowerIndex = (int)Math.Floor(sourceIndex);
+                                double fraction = sourceIndex - lowerIndex;
+
+                                if (lowerIndex < 0 || lowerIndex >= numWSBins - 1)                                
+                                    WSWD_Dist[ws, wd] = 0.0;                               
+                                else                                
+                                    WSWD_Dist[ws, wd] = originalDist[lowerIndex, wd] * (1.0 - fraction) + originalDist[lowerIndex + 1, wd] * fraction;
+                                
+                                colSum += WSWD_Dist[ws, wd];
                             }
 
-                            // Calculate average wind speed
-                            double thisIterAvgWS = 0;
-                            for (int WD_Ind = 0; WD_Ind < numTAB_Bins; WD_Ind++)
-                            {
-                                double meanWS_Direction = 0;
-
-                                for (int WS_Ind = 0; WS_Ind < numTAB_wsBins; WS_Ind++)
-                                {
-                                    double wsBinCenter = WS_Ind * wsBinWidth;
-                                    meanWS_Direction +=  WSWD_Dist[WS_Ind, WD_Ind] / 1000.0 * wsBinCenter;
-                                }
-
-                                thisIterAvgWS += meanWS_Direction * windRose[WD_Ind] / 100.0;
-                            }
-
-                            wsDiff = debiasedWS - thisIterAvgWS;
-                            wsShift += wsDiff / 2.0;
-                        }
-
+                            // Normalize the sector back to 1000.
+                            if (colSum > 0.0)                            
+                                for (int ws = 0; ws < numWSBins; ws++)
+                                    WSWD_Dist[ws, wd] *= 1000.0 / colSum;                            
+                        }    
                     }
 
                     for (int i = 0; i < thisInst.metList.numWS; i++)
@@ -3610,7 +3605,7 @@ namespace ContinuumNS
                 StreamWriter file = new StreamWriter(thisInst.sfd60mWS.FileName);
                 file.WriteLine(Header);
                 file.WriteLine(Header_date);
-                file.WriteLine(wakeModel);
+                file.WriteLine(wakeString);
                 file.WriteLine("");
 
                 // 1 year values              
@@ -4478,7 +4473,8 @@ namespace ContinuumNS
             {
                 double hubH = thisInst.modeledHeight;
                 int numWD = thisInst.metList.numWD;
-                double[] energyRose = thisInst.metList.GetAvgEnergyRose(hubH, Met.TOD.All, Met.Season.All, thisInst.metList.numWD);
+                bool useLT_Est = thisInst.metList.allMCPd;
+                double[] energyRose = thisInst.metList.GetAvgEnergyRose(hubH, Met.TOD.All, Met.Season.All, thisInst.metList.numWD, useLT_Est);
                 string energyRoseStr = "Avg Met Energy Rose";
 
                 if (energyRose == null)
@@ -4722,6 +4718,104 @@ namespace ContinuumNS
                     sw.WriteLine(thisInst.siteSuitability.soundMap[i, j].ToString());
 
             sw.Close();
+        }
+
+        // Export wind roses, energy roses, and directional WS ratios at all sites (measured or LT)
+        public void ExportInputRoses(Continuum thisInst)
+        {
+            // Exports the wind roses, energy roses, and directional WS ratios at all met sites using either the measured or LT distribution
+
+            if (thisInst.sfd60mWS.ShowDialog() == DialogResult.OK)
+            {
+                string filePath = thisInst.sfd60mWS.FileName;
+                StreamWriter file = new StreamWriter(filePath);
+
+                string measOrLT = thisInst.cboShowMeasOrLT.SelectedItem.ToString();
+                bool isLT_Est = false;
+                if (measOrLT == "LT")
+                    isLT_Est = true;
+
+                file.WriteLine("Wind Rose, Energy Rose, and Directional WS Ratios at all Met Sites using: " + measOrLT + " distribution");
+                file.WriteLine(thisInst.savedParams.savedFileName);
+                file.WriteLine(DateTime.Now.ToShortDateString());
+                file.WriteLine();
+
+                // Write out wind roses
+                // Write out headers
+                file.WriteLine(measOrLT + " Wind Rose");
+                file.WriteLine();
+                
+                file.Write("WD,");
+                for (int m = 0; m < thisInst.metList.ThisCount; m++)
+                    file.Write(thisInst.metList.metItem[m].name + ",");
+                file.WriteLine();
+
+                // Write out wind roses
+                for (int d = 0; d <thisInst.metList.numWD; d++)
+                {
+                    file.Write(d * 360.0 / thisInst.metList.numWD + ",");
+                    
+                    for (int m = 0; m < thisInst.metList.ThisCount; m++)
+                    {
+                        Met.WSWD_Dist thisDist = thisInst.metList.metItem[m].GetWS_WD_Dist(thisInst.modeledHeight, Met.TOD.All, Met.Season.All, isLT_Est);
+                        file.Write(Math.Round(thisDist.windRose[d], 4).ToString() + ",");
+                    }
+                    file.WriteLine();
+                }
+                file.WriteLine();
+
+                // Write out energy roses
+                // Write out headers
+                file.WriteLine(measOrLT + " Energy Rose");
+                file.WriteLine();
+
+                file.Write("WD,");
+                for (int m = 0; m < thisInst.metList.ThisCount; m++)
+                    file.Write(thisInst.metList.metItem[m].name + ",");
+                file.WriteLine();
+
+                // Write out energy roses
+                for (int d = 0; d < thisInst.metList.numWD; d++)
+                {
+                    file.Write(d * 360.0 / thisInst.metList.numWD + ",");
+
+                    for (int m = 0; m < thisInst.metList.ThisCount; m++)
+                    {
+                        Met.WSWD_Dist thisDist = thisInst.metList.metItem[m].GetWS_WD_Dist(thisInst.modeledHeight, Met.TOD.All, Met.Season.All, isLT_Est);
+                        file.Write(Math.Round(thisDist.energyRose[d], 4).ToString() + ",");
+                    }
+                    file.WriteLine();
+                }
+
+                file.WriteLine();
+
+                // Write out directional WS ratios
+                // Write out headers
+                file.WriteLine(measOrLT + " Directional WS Ratio");
+                file.WriteLine();
+
+                file.Write("WD,");
+                for (int m = 0; m < thisInst.metList.ThisCount; m++)
+                    file.Write(thisInst.metList.metItem[m].name + ",");
+                file.WriteLine();
+
+                // Write out directional WS ratios
+                for (int d = 0; d < thisInst.metList.numWD; d++)
+                {
+                    file.Write(d * 360.0 / thisInst.metList.numWD + ",");
+
+                    for (int m = 0; m < thisInst.metList.ThisCount; m++)
+                    {
+                        Met.WSWD_Dist thisDist = thisInst.metList.metItem[m].GetWS_WD_Dist(thisInst.modeledHeight, Met.TOD.All, Met.Season.All, isLT_Est);
+                        file.Write(Math.Round(thisDist.sectorWS_Ratio[d], 4).ToString() + ",");
+                    }
+                    file.WriteLine();
+                }
+
+                file.Close();
+            }
+
+
         }
     }
 

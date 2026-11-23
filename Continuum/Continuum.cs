@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualBasic;
+﻿using MathNet.Numerics.Statistics;
+using Microsoft.VisualBasic;
 using Microsoft.Win32;
 using System;
 using System.Data;
@@ -16,6 +17,7 @@ using System.Threading;
 using System.Windows.Controls;
 using System.Windows.Forms;
 using static ContinuumNS.BackgroundWork;
+using static ContinuumNS.MCP;
 
 namespace ContinuumNS
 {
@@ -6030,7 +6032,7 @@ namespace ContinuumNS
 
             Reference thisRef = GetSelectedReference("MCP");
             
-            thisMet.WSWD_Dists = new Met.WSWD_Dist[0];
+            
             metList.RunMCP(ref thisMet, thisRef, this, MCP_Method);
             thisMet.CalcAllLT_WSWD_Dists(this); // Calculates LT wind speed / wind direction distributions for using all day and using each season and each time of day (Day vs. Night)
 
@@ -9447,7 +9449,7 @@ namespace ContinuumNS
             MCP thisMCP = GetSelectedMCP();
             Reference thisRef = GetSelectedReference("MCP");
 
-            if (thisMCP == null)
+            if (thisMCP.height == 0)
             {
                 DoMCP();
                 thisMCP = GetSelectedMCP();
@@ -9465,6 +9467,13 @@ namespace ContinuumNS
 
             if (selMCP.debiasData.useOtherMets != chkUsingMetsForDebias.Checked)
             {
+                if (chkUsingMetsForDebias.Checked && metList.ThisCount <= 1)
+                {
+                    MessageBox.Show("No other mets have been imported");
+                    chkUsingMetsForDebias.Checked = false;
+                    return;
+                }
+
                 selMCP.debiasData.useOtherMets = chkUsingMetsForDebias.Checked;
 
                 if (selMCP.debiasData.useOtherMets)
@@ -9474,12 +9483,23 @@ namespace ContinuumNS
                     selectMetsForDebias.ShowDialog();
                     selMCP.debiasData.otherMetNameString = selectMetsForDebias.selMetNamesCommaStr;
                     double[] avgSlopeInt = metList.CalcAvgDebiasSlopeAndIntFromSelMets(selMCP.debiasData.otherMetNameString, selHeight);
+                    // Calculate intercept
+                    avgSlopeInt[1] = Statistics.Mean(selMCP.debiasData.targetLT_WS_Est) - avgSlopeInt[0] * Statistics.Mean(selMCP.debiasData.refConcWS);
+
                     selMCP.debiasData.debiasedWS = avgSlopeInt[0] * selMCP.debiasData.refLT_WS + avgSlopeInt[1];
+                    selMCP.debiasData.useOtherMets = true;
+                    selMCP.debiasData.slope = avgSlopeInt[0];
+                    selMCP.debiasData.intercept = avgSlopeInt[1];                    
                 }
                 else
                 {
                     selMCP.debiasData.otherMetNameString = "";
                     btnEditMetsUsedForDebias.Enabled = false;
+                    var regResults = MathNet.Numerics.LinearRegression.SimpleRegression.Fit(selMCP.debiasData.refConcWS, selMCP.debiasData.targetLT_WS_Est);
+                    selMCP.debiasData.intercept = regResults.Item1;
+                    selMCP.debiasData.slope = regResults.Item2;
+                    selMCP.debiasData.R_sq = MathNet.Numerics.Statistics.Correlation.Pearson(selMCP.debiasData.refConcWS, selMCP.debiasData.targetLT_WS_Est);
+                    selMCP.debiasData.debiasedWS = selMCP.debiasData.slope * selMCP.debiasData.refLT_WS + selMCP.debiasData.intercept;
                 }
                                 
                 updateThe.MCP_DebiasPlotTableAndTextbox(GetSelectedMet("MCP"), selMCP);
@@ -9493,6 +9513,12 @@ namespace ContinuumNS
             double selHeight = Convert.ToDouble(cboMCP_Height.SelectedItem.ToString());
             MCP selMCP = GetSelectedMCP();
 
+            if (metList.ThisCount == 1)
+            {
+                MessageBox.Show("No other mets have been imported");
+                return;
+            }
+
             SelectMetsForDebiasCalc selectMetsForDebias = new SelectMetsForDebiasCalc(metList, selMet.name, selHeight, selMCP.debiasData.otherMetNameString);
             selectMetsForDebias.ShowDialog();
 
@@ -9500,9 +9526,69 @@ namespace ContinuumNS
             {
                 selMCP.debiasData.otherMetNameString = selectMetsForDebias.selMetNamesCommaStr;
                 double[] avgSlopeInt = metList.CalcAvgDebiasSlopeAndIntFromSelMets(selMCP.debiasData.otherMetNameString, selHeight);
+
+                // Calculate intercept
+                avgSlopeInt[1] = Statistics.Mean(selMCP.debiasData.targetLT_WS_Est) - avgSlopeInt[0] * Statistics.Mean(selMCP.debiasData.refConcWS);
+
                 selMCP.debiasData.debiasedWS = avgSlopeInt[0] * selMCP.debiasData.refLT_WS + avgSlopeInt[1];
+                selMCP.debiasData.useOtherMets = true;
+                selMCP.debiasData.slope = avgSlopeInt[0];
+                selMCP.debiasData.intercept = avgSlopeInt[1];
                 updateThe.MCP_DebiasPlotTableAndTextbox(selMet, selMCP);
             }
         }
+
+        private void cboShowMeasOrLT_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (okToUpdate)
+            {
+                updateThe.WindOrEnergyRose();
+                updateThe.DirectionalWS_Ratios();
+            }
+        }
+
+        private void btnExportWR_DirRatios_Click(object sender, EventArgs e)
+        {
+            export.ExportInputRoses(this);
+        }
+
+   /*     private void chkUseExtendedModel_CheckedChanged(object sender, EventArgs e)
+        {
+            // Recreates site-calibrated model with/without the expanded model based on whether //Use Expanded Model// checkbox is checked or not
+            if (BW_worker.IsHandleCreated == false && BW_worker.IsBusy()) // it was force closed
+                BW_worker = new BackgroundWork();
+
+            if (Created && metList.ThisCount > 0 && modelList.ModelCount > 0 && BW_worker.IsBusy() == false)
+            {              
+
+                DialogResult yes_or_no = MessageBox.Show("Changing this setting will recreate the wind flow model and estimates. Do you want to continue?", "Continuum Wind Energy Software", MessageBoxButtons.YesNo);
+
+                if (yes_or_no == DialogResult.Yes)
+                {
+                    modelList.ClearAllExceptImported();
+                    metPairList.ClearAll();
+                    turbineList.ClearAllWSEsts();
+                    turbineList.ClearAllGrossEsts();
+                    turbineList.ClearAllNetEsts();
+                    mapList.ClearAllMaps();
+                    wakeModelList.ClearWakeMaps();                                       
+
+                    // Call background worker to run calculations
+                    BW_worker = new BackgroundWork();
+                    BackgroundWork.Vars_for_BW theArgs = new BackgroundWork.Vars_for_BW();
+                    theArgs.thisInst = this;
+                    BW_worker.Call_BW_MetCalcs(theArgs);
+                    ChangesMade();
+                }
+                else
+                {
+                    if (chkUseExtendedModel.Checked)
+                        chkUseExtendedModel.Checked = false;
+                    else
+                        chkUseExtendedModel.Checked = true;
+                }
+            }
+        }
+   */
     }
 }

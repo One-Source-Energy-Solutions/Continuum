@@ -227,7 +227,7 @@ namespace ContinuumNS
             
             metItem[newCount].CalcAvgWS(thisInst);
             metItem[newCount].CalcSectorWS_Ratios(thisInst);
-            metItem[newCount].CalcEnergyRose(thisInst);
+            metItem[newCount].CalcEnergyRose(thisInst, false);
         }
 
         /// <summary> Filters time series data, extrapolates to modeled height, and adds met site to collection. </summary>
@@ -499,7 +499,7 @@ namespace ContinuumNS
         }
 
         /// <summary> Form and return average wind rose calculated from metsUsed. </summary>
-        public double[] GetAvgWindRoseMetsUsed(string[] metsUsed, Met.TOD thisTOD, Met.Season thisSeason, double thisHeight)
+        public double[] GetAvgWindRoseMetsUsed(string[] metsUsed, Met.TOD thisTOD, Met.Season thisSeason, double thisHeight, bool isLT_Est)
         {            
             double[] avgWindRose = null;
                         
@@ -518,7 +518,7 @@ namespace ContinuumNS
                     {
                         if (metItem[i].name == metsUsed[metInd])
                         {
-                            thisDist = metItem[i].GetWS_WD_Dist(thisHeight, thisTOD, thisSeason);
+                            thisDist = metItem[i].GetWS_WD_Dist(thisHeight, thisTOD, thisSeason, isLT_Est);
                             metIsUsed = true;
                             break;
                         }
@@ -539,7 +539,7 @@ namespace ContinuumNS
         }
 
         /// <summary>  Forms and returns average wind rose using all mets in list. </summary>
-        public double[] GetAvgWindRose(double thisHeight, Met.TOD thisTOD, Met.Season thisSeason)
+        public double[] GetAvgWindRose(double thisHeight, Met.TOD thisTOD, Met.Season thisSeason, bool isLT_Est)
         {            
             double[] avgWindRose = null;             
 
@@ -549,7 +549,7 @@ namespace ContinuumNS
 
                 for (int i = 0; i < ThisCount; i++)
                 {
-                    Met.WSWD_Dist thisDist = metItem[i].GetWS_WD_Dist(thisHeight, thisTOD, thisSeason);
+                    Met.WSWD_Dist thisDist = metItem[i].GetWS_WD_Dist(thisHeight, thisTOD, thisSeason, isLT_Est);
                     for (int j = 0; j < numWD; j++)
                         avgWindRose[j] = avgWindRose[j] + thisDist.windRose[j];
                 }
@@ -563,7 +563,7 @@ namespace ContinuumNS
         }
 
         /// <summary>  Forms and returns average wind rose using all mets in list. </summary>
-        public double[] GetAvgEnergyRose(double thisHeight, Met.TOD thisTOD, Met.Season thisSeason, int thisNumWD)
+        public double[] GetAvgEnergyRose(double thisHeight, Met.TOD thisTOD, Met.Season thisSeason, int thisNumWD, bool isLT_Est)
         {
             double[] avgWindRose = null;
 
@@ -573,7 +573,7 @@ namespace ContinuumNS
 
                 for (int i = 0; i < ThisCount; i++)
                 {
-                    Met.WSWD_Dist thisDist = metItem[i].GetWS_WD_Dist(thisHeight, thisTOD, thisSeason);
+                    Met.WSWD_Dist thisDist = metItem[i].GetWS_WD_Dist(thisHeight, thisTOD, thisSeason, isLT_Est);
 
                     if (thisDist.energyRose == null)
                         break;
@@ -591,7 +591,7 @@ namespace ContinuumNS
         }
 
         /// <summary> Returns wind rose interpolated from mets in specified list of mets and weighted based on distance to specified UTM X/Y coordinates. </summary>
-        public double[] GetInterpolatedWindRose(string[] metsUsed, double UTMX, double UTMY, Met.TOD thisTOD, Met.Season thisSeason, double thisHeight)
+        public double[] GetInterpolatedWindRose(string[] metsUsed, double UTMX, double UTMY, Met.TOD thisTOD, Met.Season thisSeason, double thisHeight, bool isLT_Est)
         {            
             double[] thisWR = null; 
             TopoInfo topo = new TopoInfo();
@@ -613,7 +613,7 @@ namespace ContinuumNS
 
                             for (int WD_Ind = 0; WD_Ind <= numWD - 1; WD_Ind++)
                             {
-                                Met.WSWD_Dist thisDist = metItem[i].GetWS_WD_Dist(thisHeight, thisTOD, thisSeason); 
+                                Met.WSWD_Dist thisDist = metItem[i].GetWS_WD_Dist(thisHeight, thisTOD, thisSeason, isLT_Est); 
                                 thisWR[WD_Ind] = thisWR[WD_Ind] + thisDist.windRose[WD_Ind] * 1 / thisDistance;
                                 wgts[WD_Ind] = wgts[WD_Ind] + 1 / thisDistance;
                             }
@@ -638,7 +638,7 @@ namespace ContinuumNS
 
                     for (int WD_Ind = 0; WD_Ind <= numWD - 1; WD_Ind++)
                     {
-                        Met.WSWD_Dist thisDist = metItem[i].GetWS_WD_Dist(thisHeight, thisTOD, thisSeason);
+                        Met.WSWD_Dist thisDist = metItem[i].GetWS_WD_Dist(thisHeight, thisTOD, thisSeason, isLT_Est);
                         thisWR[WD_Ind] = thisWR[WD_Ind] + thisDist.windRose[WD_Ind] * 1 / thisDistance;
                         wgts[WD_Ind] = wgts[WD_Ind] + 1 / thisDistance;
                     }
@@ -684,7 +684,7 @@ namespace ContinuumNS
         /// <summary> Calculates and returns a WS distribution by combining wind speed distributions from the metsUsed with calculated weights. Weights are adjusted until avgWS is matched.
         /// If avgWS is within range of met avg wind speeds, use weighted average of all mets where weights are altered until avgWS is reached. If avgWS is outside range of met WS then it 
         /// uses the met with either the highest or lowest WS and adjusts WS dist until avgWS is reached. </summary>
-        public double[] CalcWS_DistForTurbOrMap(string[] metsUsed, double avgWS, int WD_Ind, Met.TOD thisTOD, Met.Season thisSeason, double thisHeight)
+        public double[] CalcWS_DistForTurbOrMap(string[] metsUsed, double avgWS, int WD_Ind, Met.TOD thisTOD, Met.Season thisSeason, double thisHeight, bool isLT_Est)
         {           
             if (metsUsed == null || avgWS == 0) 
                 return null;
@@ -700,10 +700,11 @@ namespace ContinuumNS
             double calcWS = 0;  // Average wind speed of estimated wind speed distribution          
             double avgWeightSum = 0; // Sum of WS distribution (used to find mean WS) 
             
-            Met[] minMaxWS_Mets = GetMetsWithMinMaxWS(metsUsed, WD_Ind, thisTOD, thisSeason, thisHeight); // 0: Met with minimum WS; 1: Met with maximum WS
+            Met[] minMaxWS_Mets = GetMetsWithMinMaxWS(metsUsed, WD_Ind, thisTOD, thisSeason, thisHeight, isLT_Est); // 0: Met with minimum WS; 1: Met with maximum WS
             Met.WSWD_Dist[] minMaxWS_MetsDists = new Met.WSWD_Dist[2];
-            minMaxWS_MetsDists[0] = minMaxWS_Mets[0].GetWS_WD_Dist(thisHeight, thisTOD, thisSeason);
-            minMaxWS_MetsDists[1] = minMaxWS_Mets[1].GetWS_WD_Dist(thisHeight, thisTOD, thisSeason);
+            // Get measured WS / WD distributions for mets with min/max WS
+            minMaxWS_MetsDists[0] = minMaxWS_Mets[0].GetWS_WD_Dist(thisHeight, thisTOD, thisSeason, isLT_Est);
+            minMaxWS_MetsDists[1] = minMaxWS_Mets[1].GetWS_WD_Dist(thisHeight, thisTOD, thisSeason, isLT_Est);
 
             double[] minMaxWS = new double[2]; // Average wind speeds of mets with min/max WS
             
@@ -732,7 +733,7 @@ namespace ContinuumNS
                 // First, combine all met WS distributions using met weights = 1
                 for (int i = 0; i < numMetsUsed; i++)
                 {
-                    Met.WSWD_Dist thisDist = metsForDist[i].GetWS_WD_Dist(thisHeight, thisTOD, thisSeason);
+                    Met.WSWD_Dist thisDist = metsForDist[i].GetWS_WD_Dist(thisHeight, thisTOD, thisSeason, isLT_Est);
                     metWeights[i] = 1;
                     for (int j = 0; j < numWS; j++)
                     {
@@ -778,7 +779,7 @@ namespace ContinuumNS
 
                     for (int i = 0; i < numMetsUsed; i++)
                     {
-                        Met.WSWD_Dist thisDist = metsForDist[i].GetWS_WD_Dist(thisHeight, thisTOD, thisSeason);
+                        Met.WSWD_Dist thisDist = metsForDist[i].GetWS_WD_Dist(thisHeight, thisTOD, thisSeason, isLT_Est);
                         lastWeight = metWeights[i];
                         if (metWeights[i] == 0) metWeights[i] = 0.001f;
 
@@ -920,7 +921,7 @@ namespace ContinuumNS
         }               
 
         /// <summary> Finds and returns the met sites with the min and max wind speed in specified wind direction index, time of day, and season. </summary>        
-        public Met[] GetMetsWithMinMaxWS(string[] metsUsed, int WD_Ind, Met.TOD thisTOD, Met.Season thisSeason, double thisHeight)
+        public Met[] GetMetsWithMinMaxWS(string[] metsUsed, int WD_Ind, Met.TOD thisTOD, Met.Season thisSeason, double thisHeight, bool isLT_Est)
         {
             Met[] minMaxWS = new Met[2];
             Met.WSWD_Dist[] minMaxWSDist = new Met.WSWD_Dist[2];
@@ -936,13 +937,13 @@ namespace ContinuumNS
                 {
                     if (thisMet.name == metsUsed[j])
                     {
-                        Met.WSWD_Dist thisDist = thisMet.GetWS_WD_Dist(thisHeight, thisTOD, thisSeason);
+                        Met.WSWD_Dist thisDist = thisMet.GetWS_WD_Dist(thisHeight, thisTOD, thisSeason, isLT_Est);
                         if (WD_Ind == numWD)
                         {
                             if (minMaxWS[0] == null)
                             {
                                 minMaxWS[0] = thisMet;
-                                minMaxWSDist[0] = thisMet.GetWS_WD_Dist(thisHeight, thisTOD, thisSeason);
+                                minMaxWSDist[0] = thisMet.GetWS_WD_Dist(thisHeight, thisTOD, thisSeason, isLT_Est);
                             }                                
                             else if (thisDist.WS < minMaxWSDist[0].WS)
                             {
@@ -953,7 +954,7 @@ namespace ContinuumNS
                             if (minMaxWS[1] == null)
                             {
                                 minMaxWS[1] = thisMet;
-                                minMaxWSDist[1] = thisMet.GetWS_WD_Dist(thisHeight, thisTOD, thisSeason);
+                                minMaxWSDist[1] = thisMet.GetWS_WD_Dist(thisHeight, thisTOD, thisSeason, isLT_Est);
                             }                                
                             else if (thisDist.WS > minMaxWSDist[1].WS)
                             {
@@ -967,7 +968,7 @@ namespace ContinuumNS
                             if (minMaxWS[0] == null)
                             {
                                 minMaxWS[0] = thisMet;
-                                minMaxWSDist[0] = thisMet.GetWS_WD_Dist(thisHeight, thisTOD, thisSeason);
+                                minMaxWSDist[0] = thisMet.GetWS_WD_Dist(thisHeight, thisTOD, thisSeason, isLT_Est);
                             }
                                 
                             else if (thisDist.WS * thisDist.sectorWS_Ratio[WD_Ind] < minMaxWSDist[0].WS * minMaxWSDist[0].sectorWS_Ratio[WD_Ind])
@@ -979,7 +980,7 @@ namespace ContinuumNS
                             if (minMaxWS[1] == null)
                             {
                                 minMaxWS[1] = thisMet;
-                                minMaxWSDist[1] = thisMet.GetWS_WD_Dist(thisHeight, thisTOD, thisSeason);
+                                minMaxWSDist[1] = thisMet.GetWS_WD_Dist(thisHeight, thisTOD, thisSeason, isLT_Est);
                             }                                
                             else if (thisDist.WS * thisDist.sectorWS_Ratio[WD_Ind] > minMaxWSDist[1].WS * minMaxWSDist[1].sectorWS_Ratio[WD_Ind])
                             {

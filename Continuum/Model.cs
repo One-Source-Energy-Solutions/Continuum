@@ -6,6 +6,9 @@ namespace ContinuumNS
     [Serializable()]
     public class Model
     {
+        /// <summary> If true, model uses new hilltop, slopedown, slopeup coeffs </summary>
+        public bool isExpandedModel;
+
         /// <summary> Time of day: All / Day / Night. </summary>
         public Met.TOD timeOfDay;
         /// <summary> Season: All / Winter / Spring / Summer / Fall. </summary>
@@ -13,10 +16,55 @@ namespace ContinuumNS
         /// <summary> Modeled height. </summary>
         public double height;
 
+        // New Model Coefficients (8): HillTop_UW, HillTopSpdUp_UW, HillTop_DW, SlopeDown_UW, SlopeDown_DW, SlopeUp_UW, SlopeUpSpdUp_UW, SlopeUp_DW 
+
+        // Hilltop Flow
+        /// <summary> 'A' model coefficient for upwind hilltop flow in each WD sector  (m = A*P10Expo^B) </summary>
+        public double[] hillTopUW_A;
+        /// <summary> 'B' model coefficient for upwind hilltop flow in each WD sector (m = A*P10Expo^B)  </summary>
+        public double[] hillTopUW_B;
+
+        /// <summary> 'A' model coefficient for induced speed-up upwind hilltop flow in each WD sector  (m = A*P10Expo^B) </summary>
+        public double[] hillTopUWSpdUp_A;
+        /// <summary> 'B' model coefficient for induced speed-up upwind hilltop flow in each WD sector (m = A*P10Expo^B)  </summary>
+        public double[] hillTopUWSpdUp_B;
+        /// <summary> Critical upwind exposure for hilltop flow in each WD sector </summary>
+        public double[] hillTop_UW_crit;
+
+        /// <summary> 'A' model coefficient for downwind hilltop flow in each WD sector  (m = A*P10Expo^B) </summary>
+        public double[] hillTopDW_A;
+        /// <summary> 'B' model coefficient for downwind hilltop flow in each WD sector (m = A*P10Expo^B)  </summary>
+        public double[] hillTopDW_B;
+
+        // Slope Down Flow
+        /// <summary> 'A' model coefficient for upwind slope down flow in each WD sector  (m = A*P10Expo^B) </summary>
+        public double[] slopeDownUW_A;
+        /// <summary> 'B' model coefficient for upwind slope down flow in each WD sector (m = A*P10Expo^B)  </summary>
+        public double[] slopeDownUW_B;
+
+        /// <summary> 'A' model coefficient for downwind slope down flow in each WD sector  (m = A*P10Expo^B) </summary>
+        public double[] slopeDownDW_A;
+        /// <summary> 'B' model coefficient for downwind slope down flow in each WD sector (m = A*P10Expo^B)  </summary>
+        public double[] slopeDownDW_B;
+
+        // Slope Up Flow
+        /// <summary> 'A' model coefficient for upwind slope up flow in each WD sector  (m = A*P10Expo^B) </summary>
+        public double[] slopeUpUW_A;
+        /// <summary> 'B' model coefficient for upwind slope up flow in each WD sector (m = A*P10Expo^B)  </summary>
+        public double[] slopeUpUW_B;        
+
+        /// <summary> 'A' model coefficient for downwind slope up  flow in each WD sector  (m = A*P10Expo^B) </summary>
+        public double[] slopeUpDW_A;
+        /// <summary> 'B' model coefficient for downwind slope up  flow in each WD sector (m = A*P10Expo^B)  </summary>
+        public double[] slopeUpDW_B;
+
+
         /// <summary> Elevation model coefficient in each WD sector </summary>
         public double[] elevCoeff;
         /// <summary> Valley model coefficient in each WD sector </summary>
         public double[] valleyCoeff;
+
+        /// Old Model Coefficients
 
         /// <summary> 'A' model coefficient for Downhill flow in each WD sector (m = A*P10Expo^B) </summary>
         public double[] downhill_A;
@@ -93,6 +141,12 @@ namespace ContinuumNS
                 DW_Coeff = downhill_A[WD_sec] * Math.Pow(P10_Expo, downhill_B[WD_sec]);
             else if (flowType == "Uphill" || flowType == "Valley")
                 DW_Coeff = uphill_A[WD_sec] * Math.Pow(P10_Expo, uphill_B[WD_sec]);
+            else if (flowType == "HillTop_DW")
+                DW_Coeff = hillTopDW_A[WD_sec] * Math.Pow(P10_Expo, hillTopDW_B[WD_sec]);
+            else if (flowType == "SlopeDown_DW")
+                DW_Coeff = slopeDownDW_A[WD_sec] * Math.Pow(P10_Expo, slopeDownDW_B[WD_sec]);
+            else if (flowType == "SlopeUp_DW")
+                DW_Coeff = slopeUpDW_A[WD_sec] * Math.Pow(P10_Expo, slopeUpDW_B[WD_sec]);
 
             if (DW_Coeff > 0.18)
                 DW_Coeff = 0.18f;
@@ -175,6 +229,26 @@ namespace ContinuumNS
                     UW_Coeff = uphill_A[WD_sec] * Math.Pow(P10_Expo, uphill_B[WD_sec]);
                     if (UW_Coeff > 0.18) UW_Coeff = 0.18f;
                 }
+                else if (flowType == "Hilltop_UW")
+                { // UW > UW crit, Negative coeff
+                    UW_Coeff = -hillTopUW_A[WD_sec] * Math.Pow(P10_Expo, hillTopUW_B[WD_sec]);
+                    if (UW_Coeff < -0.18) UW_Coeff = -0.18f;
+                }
+                else if (flowType == "HilltopSpdUp_UW")
+                { // UW <= UW crit, Positive coeff
+                    UW_Coeff = hillTopUWSpdUp_A[WD_sec] * Math.Pow(P10_Expo, hillTopUWSpdUp_B[WD_sec]);
+                    if (UW_Coeff > 0.18) UW_Coeff = 0.18f;
+                }
+                else if (flowType == "SlopeDown_UW")
+                { // UW > UW crit, Negative coeff
+                    UW_Coeff = -slopeDownUW_A[WD_sec] * Math.Pow(P10_Expo, slopeDownUW_B[WD_sec]);
+                    if (UW_Coeff < -0.18) UW_Coeff = -0.18f;
+                }
+                else if (flowType == "SlopeUp_UW")
+                { // UW > UW crit, Negative coeff
+                    UW_Coeff = -slopeUpUW_A[WD_sec] * Math.Pow(P10_Expo, slopeUpUW_B[WD_sec]);
+                    if (UW_Coeff < -0.18) UW_Coeff = -0.18f;
+                }                
 
             }
 
@@ -253,7 +327,7 @@ namespace ContinuumNS
             double Stab_corr = 0;
             NodeCollection.Sep_Nodes[] Flow_Sep_Node = null;
 
-            string flowType = GetFlowType(UW_Expo, DW_Expo, WD_Ind, UW_or_DW, Flow_Sep_Node, 0, useFlowSep, 0, useValley);
+            string flowType = GetFlowType(UW_Expo, DW_Expo, WD_Ind, UW_or_DW, Flow_Sep_Node, 0, useFlowSep, 0, useValley, true);
 
             if (flowType == "Downhill")  // Downhill
                 Stab_corr = Math.Pow(10, DH_Stab_A[WD_Ind]);
@@ -268,7 +342,7 @@ namespace ContinuumNS
         }
 
         /// <summary> Determines and returns flow type upwind or downwind of site: Downhill, Uphill, Induced Speed-up, Valley or Turbulent </summary>        
-        public string GetFlowType(double thisUW, double thisDW, int WD_sec, string UW_or_DW, NodeCollection.Sep_Nodes[] flowSepNodes, double thisWS, bool useFlowSep, int radiusInd, bool useValley)
+        public string GetFlowType(double thisUW, double thisDW, int WD_sec, string UW_or_DW, NodeCollection.Sep_Nodes[] flowSepNodes, double thisWS, bool useFlowSep, int radiusInd, bool useValley, bool useOldModelLogic = false)
         {             
             string flowType = "";
             bool isTurbulent = false;
@@ -309,16 +383,37 @@ namespace ContinuumNS
 
             if (isTurbulent == false)
             {
-                if ((thisDW >= 0 && UW_or_DW == "DW") || (thisUW < 0 && thisDW > 0 && UW_or_DW == "UW"))
-                    flowType = "Downhill";
-                else if (thisUW > UW_crit[WD_sec] || (thisDW < 0 && UW_or_DW == "DW"))
-                    flowType = "Uphill";
-                else if (thisUW >= 0 && thisUW <= UW_crit[WD_sec] && UW_or_DW == "UW")
-                    flowType = "SpdUp";
-             //   else if (thisUW < 0 && thisDW <= 0 && useValley)
-               //     flowType = "Valley";
-                else if (thisUW < 0 && thisDW <= 0)
-                    flowType = "Downhill";
+                if (isExpandedModel == false || useOldModelLogic)
+                {
+                    if ((thisDW >= 0 && UW_or_DW == "DW") || (thisUW < 0 && thisDW > 0 && UW_or_DW == "UW"))
+                        flowType = "Downhill";
+                    else if (thisUW > UW_crit[WD_sec] || (thisDW < 0 && UW_or_DW == "DW"))
+                        flowType = "Uphill";
+                    else if (thisUW >= 0 && thisUW <= UW_crit[WD_sec] && UW_or_DW == "UW")
+                        flowType = "SpdUp";
+                    //   else if (thisUW < 0 && thisDW <= 0 && useValley)
+                    //     flowType = "Valley";
+                    else if (thisUW < 0 && thisDW <= 0)
+                        flowType = "Downhill";
+                }
+                else
+                {
+                    if (UW_or_DW == "DW" && thisUW > 0 && thisDW > 0)
+                        flowType = "HillTop_DW";
+                    else if (UW_or_DW == "UW" && thisUW > hillTop_UW_crit[WD_sec] && thisDW > 0)
+                        flowType = "Hilltop_UW";
+                    else if (UW_or_DW == "UW" && thisUW > 0 && thisUW <= hillTop_UW_crit[WD_sec] && thisDW > 0)
+                        flowType = "HilltopSpdUp_UW";
+                    else if (UW_or_DW == "DW" && thisUW < 0 && thisDW > 0)
+                        flowType = "SlopeDown_DW";
+                    else if (UW_or_DW == "UW" && thisUW < 0 && thisDW > 0)
+                        flowType = "SlopeDown_UW";
+                    else if (UW_or_DW == "DW" && thisUW > 0 && thisDW < 0)
+                        flowType = "SlopeUp_DW";
+                    else if (UW_or_DW == "UW" && thisUW > 0 && thisDW < 0)
+                        flowType = "SlopeUp_UW";
+                   
+                }
             }
             else
                 flowType = "Turbulent";
@@ -352,6 +447,33 @@ namespace ContinuumNS
             {
                 elevCoeff[i] = 0.005;
                 valleyCoeff[i] = 0.01;
+
+                // New model coefficients (expanded to hilltop, slope down, slope up)                
+                // Hilltop
+                hillTopDW_A[i] = 0.1432f; 
+                hillTopDW_B[i] = -0.6537f;
+
+                hillTopUW_A[i] = 0.0819f; 
+                hillTopUW_B[i] = -0.6242f;
+                hillTop_UW_crit[i] = 21f;
+                hillTopUWSpdUp_A[i] = 0.0165f; 
+                hillTopUWSpdUp_B[i] = -0.5966f; 
+
+                // Slope Dwon
+                slopeDownDW_A[i] = 0.1432f;
+                slopeDownDW_B[i] = -0.6537f;
+
+                slopeDownUW_A[i] = 0.1432f;
+                slopeDownUW_B[i] = -0.6537f;
+
+                // Slope Up
+                slopeUpDW_A[i] = 0.0819f;
+                slopeUpDW_B[i] = -0.6242f;
+
+                slopeUpUW_A[i] = 0.0819f;
+                slopeUpUW_B[i] = -0.6242f;
+                
+                // Old Model coefficients
 
                 downhill_A[i] = 0.1432f; // old DW_A = 0.2551
                 downhill_B[i] = -0.6537f; // old DW_B = -0.774
@@ -388,9 +510,31 @@ namespace ContinuumNS
 
         /// <summary> Sizes model coefficient arrays </summary> 
         public void SizeArrays(int numWD)
-        {     
+        {
+            // Hilltop DW
+            hillTopDW_A = new double[numWD];
+            hillTopDW_B = new double[numWD];
+            // Hilltop UW
+            hillTopUW_A = new double[numWD];
+            hillTopUW_B = new double[numWD];
+            hillTop_UW_crit = new double[numWD];
+            hillTopUWSpdUp_A = new double[numWD];
+            hillTopUWSpdUp_B = new double[numWD];
+            // Slope Down UW & DW
+            slopeDownDW_A = new double[numWD];
+            slopeDownDW_B = new double[numWD];
+            slopeDownUW_A = new double[numWD];
+            slopeDownUW_B = new double[numWD];
+            // SlopeUp DW
+            slopeUpDW_A = new double[numWD];
+            slopeUpDW_B = new double[numWD];
+            // Slope Up UW
+            slopeUpUW_A = new double[numWD];
+            slopeUpUW_B = new double[numWD];
+            
             elevCoeff = new double[numWD];
             valleyCoeff = new double[numWD];
+
             downhill_A = new double[numWD];
             downhill_B = new double[numWD];
             uphill_A = new double[numWD];

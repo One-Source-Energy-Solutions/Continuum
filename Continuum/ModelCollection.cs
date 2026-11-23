@@ -535,10 +535,12 @@ namespace ContinuumNS
             int numRadii = thisInst.radiiList.ThisCount;
             int numWD = thisInst.metList.numWD;
             Model[] models = new Model[numRadii];
+            bool useExpandedModel = false; // thisInst.chkUseExtendedModel.Checked;
 
             for (int i = 0; i < thisInst.radiiList.ThisCount; i++)
             {
                 models[i] = new Model();
+                models[i].isExpandedModel = useExpandedModel;
                 models[i].SizeArrays(numWD);
                 models[i].SetDefaultModelCoeffs(numWD);
                 models[i].SetDefaultLimits();
@@ -762,6 +764,7 @@ namespace ContinuumNS
             int numPairs = thisInst.metPairList.PairCount;
             int numRadii = thisInst.radiiList.ThisCount;
             NodeCollection nodeList = new NodeCollection();
+            bool useExpandedModel = false; // thisInst.chkUseExtendedModel.Checked;
 
             int numWD = thisInst.metList.numWD;                        
             Model[] models;
@@ -774,7 +777,8 @@ namespace ContinuumNS
 
                 for (int i = 0; i < numRadii; i++)
                 {
-                    models[i] = new Model(); 
+                    models[i] = new Model();
+                    models[i].isExpandedModel = useExpandedModel;
                     models[i].SizeArrays(numWD);
                     int thisRadius = thisInst.radiiList.investItem[i].radius;
                     models[i].SetDefaultLimits();
@@ -907,12 +911,13 @@ namespace ContinuumNS
                                             
             double sectorWS = startWS;
             bool useValley = thisInst.topo.useValley;
+            bool useLT_Est = thisInst.metList.allMCPd;
 
             if (numNodes > 0)
             {
                 double[] WS_AtNodes = new double[numNodes];
                 thisNode = pathOfNodes[0];
-                double[] nodeWindRose = thisInst.metList.GetInterpolatedWindRose(thisModel.metsUsed, thisNode.UTMX, thisNode.UTMY, thisModel.timeOfDay, thisModel.season, thisInst.modeledHeight);
+                double[] nodeWindRose = thisInst.metList.GetInterpolatedWindRose(thisModel.metsUsed, thisNode.UTMX, thisNode.UTMY, thisModel.timeOfDay, thisModel.season, thisInst.modeledHeight, useLT_Est);
                 nodeUTM2.UTMX = thisNode.UTMX;
                 nodeUTM2.UTMY = thisNode.UTMY;
                                 
@@ -921,7 +926,7 @@ namespace ContinuumNS
                 avgP10UW = (startMet.gridStats.stats[radInd].P10_UW[WD_Ind] + thisNode.gridStats.stats[radInd].P10_UW[WD_Ind]) / 2;
                 elevDiff = thisNode.elev - startMet.elev;
 
-                UW_1 = startMet.expo[radInd].GetWgtAvg(startMet.GetWS_WD_Dist(thisInst.modeledHeight, thisModel.timeOfDay, thisModel.season).windRose, WD_Ind, "UW", "Expo");
+                UW_1 = startMet.expo[radInd].GetWgtAvg(startMet.GetWS_WD_Dist(thisInst.modeledHeight, thisModel.timeOfDay, thisModel.season, useLT_Est).windRose, WD_Ind, "UW", "Expo");
                 UW_2 = thisNode.expo[radInd].GetWgtAvg(nodeWindRose, WD_Ind, "UW", "Expo");
                 avgUW = (UW_1 + UW_2) / 2;
 
@@ -930,7 +935,7 @@ namespace ContinuumNS
                 //      UW_PL_Grade = (startMet.expo[radiusIndex].UW_ParallelGrade[WD_Ind] + thisNode.expo[radiusIndex].UW_ParallelGrade[WD_Ind]) / 2;
 
                 WS_1 = sectorWS;
-                Met.WSWD_Dist startMetDist = startMet.GetWS_WD_Dist(thisInst.modeledHeight, thisModel.timeOfDay, thisModel.season);
+                Met.WSWD_Dist startMetDist = startMet.GetWS_WD_Dist(thisInst.modeledHeight, thisModel.timeOfDay, thisModel.season, useLT_Est);
 
                 if (thisInst.topo.useSR == true)
                 {
@@ -990,12 +995,12 @@ namespace ContinuumNS
                     node1 = pathOfNodes[nodeInd];
                     nodeUTM1.UTMX = pathOfNodes[nodeInd].UTMX;
                     nodeUTM1.UTMY = pathOfNodes[nodeInd].UTMY;
-                    double[] node1WindRose = thisInst.metList.GetInterpolatedWindRose(thisModel.metsUsed, node1.UTMX, node1.UTMY, thisModel.timeOfDay, thisModel.season, thisInst.modeledHeight);
+                    double[] node1WindRose = thisInst.metList.GetInterpolatedWindRose(thisModel.metsUsed, node1.UTMX, node1.UTMY, thisModel.timeOfDay, thisModel.season, thisInst.modeledHeight, useLT_Est);
 
                     node2 = pathOfNodes[nodeInd + 1];
                     nodeUTM2.UTMX = pathOfNodes[nodeInd + 1].UTMX;
                     nodeUTM2.UTMY = pathOfNodes[nodeInd + 1].UTMY;
-                    double[] node2WindRose = thisInst.metList.GetInterpolatedWindRose(thisModel.metsUsed, node2.UTMX, node2.UTMY, thisModel.timeOfDay, thisModel.season, thisInst.modeledHeight);
+                    double[] node2WindRose = thisInst.metList.GetInterpolatedWindRose(thisModel.metsUsed, node2.UTMX, node2.UTMY, thisModel.timeOfDay, thisModel.season, thisInst.modeledHeight, useLT_Est);
                                         
                     avgP10DW = (node1.gridStats.stats[radInd].P10_DW[WD_Ind] + node2.gridStats.stats[radInd].P10_DW[WD_Ind]) / 2;
                     avgP10UW = (node1.gridStats.stats[radInd].P10_UW[WD_Ind] + node2.gridStats.stats[radInd].P10_UW[WD_Ind]) / 2;
@@ -1070,8 +1075,8 @@ namespace ContinuumNS
                 nodeUTM2.UTMX = endNode.UTMX;
                 nodeUTM2.UTMY = endNode.UTMY;
 
-                nodeWindRose = thisInst.metList.GetInterpolatedWindRose(thisModel.metsUsed, thisNode.UTMX, thisNode.UTMY, thisModel.timeOfDay, thisModel.season, thisInst.modeledHeight);
-                double[] endNodeWindRose = thisInst.metList.GetInterpolatedWindRose(thisModel.metsUsed, endNode.UTMX, endNode.UTMY, thisModel.timeOfDay, thisModel.season, thisInst.modeledHeight);
+                nodeWindRose = thisInst.metList.GetInterpolatedWindRose(thisModel.metsUsed, thisNode.UTMX, thisNode.UTMY, thisModel.timeOfDay, thisModel.season, thisInst.modeledHeight, useLT_Est);
+                double[] endNodeWindRose = thisInst.metList.GetInterpolatedWindRose(thisModel.metsUsed, endNode.UTMX, endNode.UTMY, thisModel.timeOfDay, thisModel.season, thisInst.modeledHeight, useLT_Est);
                                                 
                 avgP10DW = (endNode.gridStats.stats[radInd].P10_DW[WD_Ind] + thisNode.gridStats.stats[radInd].P10_DW[WD_Ind]) / 2;
                 avgP10UW = (endNode.gridStats.stats[radInd].P10_UW[WD_Ind] + thisNode.gridStats.stats[radInd].P10_UW[WD_Ind]) / 2;
@@ -1140,8 +1145,8 @@ namespace ContinuumNS
                 // No nodes so just one step from Met 1 to Target
                 WS_1 = sectorWS;
 
-                double[] startWindRose = thisInst.metList.GetInterpolatedWindRose(thisModel.metsUsed, startMet.UTMX, startMet.UTMY, thisModel.timeOfDay, thisModel.season, thisInst.modeledHeight);
-                double[] endNodeWindRose = thisInst.metList.GetInterpolatedWindRose(thisModel.metsUsed, endNode.UTMX, endNode.UTMY, thisModel.timeOfDay, thisModel.season, thisInst.modeledHeight);
+                double[] startWindRose = thisInst.metList.GetInterpolatedWindRose(thisModel.metsUsed, startMet.UTMX, startMet.UTMY, thisModel.timeOfDay, thisModel.season, thisInst.modeledHeight, useLT_Est);
+                double[] endNodeWindRose = thisInst.metList.GetInterpolatedWindRose(thisModel.metsUsed, endNode.UTMX, endNode.UTMY, thisModel.timeOfDay, thisModel.season, thisInst.modeledHeight, useLT_Est);
                                 
                 nodeUTM2.UTMX = endNode.UTMX;
                 nodeUTM2.UTMY = endNode.UTMY;
@@ -1268,6 +1273,7 @@ namespace ContinuumNS
             //  double UW_CW_Grade = 0;
             //  double UW_PL_Grade = 0;
             bool useValley = thisInst.topo.useValley;
+            bool useLT_Est = thisInst.metList.allMCPd;
 
             double avgUW = 0;
             double avgDW = 0;
@@ -1324,7 +1330,7 @@ namespace ContinuumNS
             WS_Est_Return.sectorWS = new double[numWD];
             double[] sectorWS = new double[numWD];
             double[] WS_Equiv;
-            Met.WSWD_Dist startMetDist = startMet.GetWS_WD_Dist(thisInst.modeledHeight, thisModel.timeOfDay, thisModel.season);
+            Met.WSWD_Dist startMetDist = startMet.GetWS_WD_Dist(thisInst.modeledHeight, thisModel.timeOfDay, thisModel.season, useLT_Est);
 
             for (int WD = 0; WD < numWD; WD++)
                 sectorWS[WD] = startMetDist.WS * startMetDist.sectorWS_Ratio[WD];
@@ -1333,7 +1339,7 @@ namespace ContinuumNS
             {
                 WS_Est_Return.sectorWS_AtNodes = new double[numNodes, numWD];
                 thisNode = pathOfNodes[0];
-                double[] nodeWindRose = thisInst.metList.GetInterpolatedWindRose(thisModel.metsUsed, thisNode.UTMX, thisNode.UTMY, thisModel.timeOfDay, thisModel.season, thisInst.modeledHeight);
+                double[] nodeWindRose = thisInst.metList.GetInterpolatedWindRose(thisModel.metsUsed, thisNode.UTMX, thisNode.UTMY, thisModel.timeOfDay, thisModel.season, thisInst.modeledHeight, useLT_Est);
                 nodeUTM2.UTMX = thisNode.UTMX;
                 nodeUTM2.UTMY = thisNode.UTMY;
                 WS_Equiv = GetWS_Equiv(startMetDist.windRose, nodeWindRose, sectorWS);
@@ -1410,12 +1416,12 @@ namespace ContinuumNS
                     node1 = pathOfNodes[nodeInd];
                     nodeUTM1.UTMX = pathOfNodes[nodeInd].UTMX;
                     nodeUTM1.UTMY = pathOfNodes[nodeInd].UTMY;
-                    double[] node1WindRose = thisInst.metList.GetInterpolatedWindRose(thisModel.metsUsed, node1.UTMX, node1.UTMY, thisModel.timeOfDay, thisModel.season, thisInst.modeledHeight);
+                    double[] node1WindRose = thisInst.metList.GetInterpolatedWindRose(thisModel.metsUsed, node1.UTMX, node1.UTMY, thisModel.timeOfDay, thisModel.season, thisInst.modeledHeight, useLT_Est);
                     
                     node2 = pathOfNodes[nodeInd + 1];
                     nodeUTM2.UTMX = pathOfNodes[nodeInd + 1].UTMX;
                     nodeUTM2.UTMY = pathOfNodes[nodeInd + 1].UTMY;
-                    double[] node2WindRose = thisInst.metList.GetInterpolatedWindRose(thisModel.metsUsed, node2.UTMX, node2.UTMY, thisModel.timeOfDay, thisModel.season, thisInst.modeledHeight);
+                    double[] node2WindRose = thisInst.metList.GetInterpolatedWindRose(thisModel.metsUsed, node2.UTMX, node2.UTMY, thisModel.timeOfDay, thisModel.season, thisInst.modeledHeight, useLT_Est);
                                  
                     for (int WD_Ind = 0; WD_Ind <= numWD - 1; WD_Ind++)
                         sectorWS[WD_Ind] = WS_Est_Return.sectorWS_AtNodes[nodeInd, WD_Ind];
@@ -1500,8 +1506,8 @@ namespace ContinuumNS
                 for (int WD_Ind = 0; WD_Ind < numWD; WD_Ind++)
                     sectorWS[WD_Ind] = WS_Est_Return.sectorWS_AtNodes[nodeInd, WD_Ind];
                 
-                nodeWindRose = thisInst.metList.GetInterpolatedWindRose(thisModel.metsUsed, thisNode.UTMX, thisNode.UTMY, thisModel.timeOfDay, thisModel.season, thisInst.modeledHeight);
-                double[] endNodeWindRose = thisInst.metList.GetInterpolatedWindRose(thisModel.metsUsed, endNode.UTMX, endNode.UTMY, thisModel.timeOfDay, thisModel.season, thisInst.modeledHeight);
+                nodeWindRose = thisInst.metList.GetInterpolatedWindRose(thisModel.metsUsed, thisNode.UTMX, thisNode.UTMY, thisModel.timeOfDay, thisModel.season, thisInst.modeledHeight, useLT_Est);
+                double[] endNodeWindRose = thisInst.metList.GetInterpolatedWindRose(thisModel.metsUsed, endNode.UTMX, endNode.UTMY, thisModel.timeOfDay, thisModel.season, thisInst.modeledHeight, useLT_Est);
 
                 WS_Equiv = GetWS_Equiv(nodeWindRose, endNodeWindRose, sectorWS);
                 elevDiff = endNode.elev - thisNode.elev;
@@ -1573,8 +1579,8 @@ namespace ContinuumNS
             }
             else {
                 // No nodes so just one step from Met 1 to Target
-                double[]  startWindRose = thisInst.metList.GetInterpolatedWindRose(thisModel.metsUsed, startMet.UTMX, startMet.UTMY, thisModel.timeOfDay, thisModel.season, thisInst.modeledHeight); // should use start met wind rose and not interpolated
-                double[] endNodeWindRose = thisInst.metList.GetInterpolatedWindRose(thisModel.metsUsed, endNode.UTMX, endNode.UTMY, thisModel.timeOfDay, thisModel.season, thisInst.modeledHeight);
+                double[]  startWindRose = thisInst.metList.GetInterpolatedWindRose(thisModel.metsUsed, startMet.UTMX, startMet.UTMY, thisModel.timeOfDay, thisModel.season, thisInst.modeledHeight, useLT_Est); // should use start met wind rose and not interpolated
+                double[] endNodeWindRose = thisInst.metList.GetInterpolatedWindRose(thisModel.metsUsed, endNode.UTMX, endNode.UTMY, thisModel.timeOfDay, thisModel.season, thisInst.modeledHeight, useLT_Est);
                                 
                 WS_Equiv = GetWS_Equiv(startWindRose, endNodeWindRose, sectorWS);
                 nodeUTM2.UTMX = endNode.UTMX;
@@ -1867,6 +1873,84 @@ namespace ContinuumNS
                 deltaWS = deltaFS + deltaDH + deltaUH;
                 AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaWS, "Total", "Expo");
             }
+            else if (flow1 == "HillTop_DW" && flow2 == "SlopeDown_DW") 
+            {
+                coeff = thisModel.CalcDW_Coeff(P10_DW, P10_UW, WD_Ind, flow1);
+                deltaDH = coeff * (0 - DW1);
+                AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaDH, flow1, "Expo"); // Hilltop to flat
+
+                coeff = thisModel.CalcDW_Coeff(P10_DW, P10_UW, WD_Ind, flow2);
+                deltaUH = coeff * (DW2 - 0);
+                AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaUH, flow2, "Expo"); // flat to slope down
+
+                deltaWS = deltaDH + deltaUH;
+                AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaWS, "Total", "Expo");
+            }
+            else if (flow1 == "HillTop_DW" && flow2 == "SlopeUp_DW")
+            {
+                coeff = thisModel.CalcDW_Coeff(P10_DW, P10_UW, WD_Ind, flow1);
+                deltaDH = coeff * (0 - DW1);
+                AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaDH, flow1, "Expo"); // Hilltop to flat
+
+                coeff = thisModel.CalcDW_Coeff(P10_DW, P10_UW, WD_Ind, flow2);
+                deltaUH = coeff * (DW2 - 0);
+                AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaUH, flow2, "Expo"); // flat to slope up
+
+                deltaWS = deltaDH + deltaUH;
+                AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaWS, "Total", "Expo");
+            }
+            else if (flow1 == "SlopeDown_DW" && flow2 == "HillTop_DW")
+            {
+                coeff = thisModel.CalcDW_Coeff(P10_DW, P10_UW, WD_Ind, flow1);
+                deltaDH = coeff * (0 - DW1);
+                AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaDH, flow1, "Expo"); // Slope down to flat
+
+                coeff = thisModel.CalcDW_Coeff(P10_DW, P10_UW, WD_Ind, flow2);
+                deltaUH = coeff * (DW2 - 0);
+                AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaUH, flow2, "Expo"); // flat to hill
+
+                deltaWS = deltaDH + deltaUH;
+                AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaWS, "Total", "Expo");
+            }
+            else if (flow1 == "SlopeDown_DW" && flow2 == "SlopeUp_DW")
+            {
+                coeff = thisModel.CalcDW_Coeff(P10_DW, P10_UW, WD_Ind, flow1);
+                deltaDH = coeff * (0 - DW1);
+                AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaDH, flow1, "Expo"); // Slope down to flat
+
+                coeff = thisModel.CalcDW_Coeff(P10_DW, P10_UW, WD_Ind, flow2);
+                deltaUH = coeff * (DW2 - 0);
+                AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaUH, flow2, "Expo"); // flat to SlopeUp_DW
+
+                deltaWS = deltaDH + deltaUH;
+                AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaWS, "Total", "Expo");
+            }
+            else if (flow1 == "SlopeUp_DW" && flow2 == "HillTop_DW")
+            {
+                coeff = thisModel.CalcDW_Coeff(P10_DW, P10_UW, WD_Ind, flow1);
+                deltaDH = coeff * (0 - DW1);
+                AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaDH, flow1, "Expo"); // Slope up to flat
+
+                coeff = thisModel.CalcDW_Coeff(P10_DW, P10_UW, WD_Ind, flow2);
+                deltaUH = coeff * (DW2 - 0);
+                AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaUH, flow2, "Expo"); // flat to hill
+
+                deltaWS = deltaDH + deltaUH;
+                AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaWS, "Total", "Expo");
+            }
+            else if (flow1 == "SlopeUp_DW" && flow2 == "SlopeDown_DW")
+            {
+                coeff = thisModel.CalcDW_Coeff(P10_DW, P10_UW, WD_Ind, flow1);
+                deltaDH = coeff * (0 - DW1);
+                AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaDH, flow1, "Expo"); // Slope up to flat
+
+                coeff = thisModel.CalcDW_Coeff(P10_DW, P10_UW, WD_Ind, flow2);
+                deltaUH = coeff * (DW2 - 0);
+                AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaUH, flow2, "Expo"); // flat to SlopeDown_DW
+
+                deltaWS = deltaDH + deltaUH;
+                AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaWS, "Total", "Expo");
+            }
 
             return coeffsDelta;
         }
@@ -1985,9 +2069,9 @@ namespace ContinuumNS
 
             if (flow1 == "Turbulent" && flow2 == "Turbulent")
             { // Scenario 1             
-                
+
                 coeffsDelta = GetDeltaWS_UW_Turbulent(node1Coords, UW1, flowSepNode1, thisModel, true, WD_Ind, radiusIndex, P10_UW, P10_DW); // Site 1 to Sep Pt 1
-           
+
                 // Sep Pt 1 to Sep Pt 2 // for now assume that flow is uphill
                 coeff = thisModel.CalcUW_Coeff(P10_UW, P10_DW, WD_Ind, "Uphill");
                 deltaUH = coeff * (flowSepNode2.highNode.expo[radiusIndex].expo[WD_Ind] - flowSepNode1.highNode.expo[radiusIndex].expo[WD_Ind]);
@@ -1996,14 +2080,15 @@ namespace ContinuumNS
                 Coeff_Delta_WS[] turbCoeffDeltaWS = GetDeltaWS_UW_Turbulent(node2Coords, UW2, flowSepNode2, thisModel, false, WD_Ind, radiusIndex, P10_UW, P10_DW); // Sep Pt 2 to Site 2
                 int coeffsDeltOldLength = coeffsDelta.Length;
                 Array.Resize(ref coeffsDelta, coeffsDeltOldLength + turbCoeffDeltaWS.Length);
-                Array.Copy(turbCoeffDeltaWS, 0, coeffsDelta, coeffsDeltOldLength, turbCoeffDeltaWS.Length);                              
+                Array.Copy(turbCoeffDeltaWS, 0, coeffsDelta, coeffsDeltOldLength, turbCoeffDeltaWS.Length);
 
                 for (int i = 0; i < coeffsDelta.Length; i++)
                     deltaWS = deltaWS + coeffsDelta[i].deltaWS_Expo;
-               
+
                 AddCoeffDeltaWS(ref coeffsDelta, 0, deltaWS, "Total", "Expo");
             }
-            else if (flow1 == flow2) {  // Scenario 2
+            else if (flow1 == flow2)
+            {  // Scenario 2
 
                 coeff = thisModel.CalcUW_Coeff(P10_UW, P10_DW, WD_Ind, flow1);
                 deltaWS = coeff * (UW2 - UW1);
@@ -2070,7 +2155,8 @@ namespace ContinuumNS
                     deltaUH = coeff * (flowSepNode2.highNode.expo[radiusIndex].expo[WD_Ind] - thisModel.UW_crit[WD_Ind]);
                     AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaUH, "Uphill", "Expo");
                 }
-                else { // Sep Pt 2 is Speed-up
+                else
+                { // Sep Pt 2 is Speed-up
                     coeff = thisModel.CalcUW_Coeff(P10_UW, P10_DW, WD_Ind, flow1);
                     deltaDH = coeff * (0 - UW1);
                     AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaDH, flow1, "Expo");
@@ -2150,7 +2236,8 @@ namespace ContinuumNS
                     deltaUH = coeff * (flowSepNode2.highNode.expo[radiusIndex].expo[WD_Ind] - UW1);
                     AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaUH, flow1, "Expo");
                 }
-                else { // Sep Pt 2 is Speed-up
+                else
+                { // Sep Pt 2 is Speed-up
                     coeff = thisModel.CalcUW_Coeff(P10_UW, P10_DW, WD_Ind, flow1);
                     deltaUH = coeff * (thisModel.UW_crit[WD_Ind] - UW1);
                     AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaUH, flow1, "Expo");
@@ -2168,7 +2255,7 @@ namespace ContinuumNS
 
                 for (int i = 0; i < coeffsDelta.Length; i++)
                     deltaWS = deltaWS + coeffsDelta[i].deltaWS_Expo;
-                
+
                 AddCoeffDeltaWS(ref coeffsDelta, 0, deltaWS, "Total", "Expo");
             }
             else if (flow1 == "SpdUp" && flow2 == "Uphill")
@@ -2221,7 +2308,8 @@ namespace ContinuumNS
                     deltaSU = coeff * (flowSepNode2.highNode.expo[radiusIndex].expo[WD_Ind] - UW1);
                     AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaSU, flow1, "Expo");
                 }
-                else { // Sep Pt 2 is Uphill
+                else
+                { // Sep Pt 2 is Uphill
                     coeff = thisModel.CalcUW_Coeff(P10_UW, P10_DW, WD_Ind, flow1);
                     deltaSU = coeff * (thisModel.UW_crit[WD_Ind] - UW1);
                     AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaSU, flow1, "Expo");
@@ -2239,7 +2327,7 @@ namespace ContinuumNS
 
                 for (int i = 0; i < coeffsDelta.Length; i++)
                     deltaWS = deltaWS + coeffsDelta[i].deltaWS_Expo;
-                                
+
                 AddCoeffDeltaWS(ref coeffsDelta, 0, deltaWS, "Total", "Expo");
             }
             else if (flow1 == "Valley" && flow2 == "Uphill")
@@ -2301,7 +2389,8 @@ namespace ContinuumNS
                     deltaUH = coeff * (flowSepNode2.highNode.expo[radiusIndex].expo[WD_Ind] - thisModel.UW_crit[WD_Ind]);
                     AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaUH, "Uphill", "Expo");
                 }
-                else { // Sep Pt 2 is Speed-up
+                else
+                { // Sep Pt 2 is Speed-up
                     coeff = thisModel.CalcUW_Coeff(P10_UW, P10_DW, WD_Ind, flow1);
                     deltaVL = coeff * (0 - UW1);
                     AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaVL, flow1, "Expo");
@@ -2319,14 +2408,14 @@ namespace ContinuumNS
 
                 for (int i = 0; i < coeffsDelta.Length; i++)
                     deltaWS = deltaWS + coeffsDelta[i].deltaWS_Expo;
-                
+
                 AddCoeffDeltaWS(ref coeffsDelta, 0, deltaWS, "Total", "Expo");
             }
             else if (flow1 == "Turbulent" && flow2 == "Uphill")
             { // Scenario 19
                 flowSepNode1 = GetFlowSepNodes(sepNodes1, WD_Ind);
                 // Site 1 to Sep Pt 1
-                coeffsDelta = GetDeltaWS_UW_Turbulent(node1Coords, UW1, flowSepNode1, thisModel, true, WD_Ind, radiusIndex, P10_UW, P10_DW);                            
+                coeffsDelta = GetDeltaWS_UW_Turbulent(node1Coords, UW1, flowSepNode1, thisModel, true, WD_Ind, radiusIndex, P10_UW, P10_DW);
 
                 if (flowSepNode1.highNode.expo[radiusIndex].expo[WD_Ind] > thisModel.UW_crit[WD_Ind]) // Sep Pt 1 to Site 2
                 { // Sep Pt 1 is uphill
@@ -2336,7 +2425,8 @@ namespace ContinuumNS
                     deltaUH = coeff * (UW2 - flowSepNode1.highNode.expo[radiusIndex].expo[WD_Ind]);
                     AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaUH, flow2, "Expo");
                 }
-                else { // Sep Pt 1 is speed-up
+                else
+                { // Sep Pt 1 is speed-up
                     coeff = thisModel.CalcUW_Coeff(P10_UW, P10_DW, WD_Ind, "SpdUp");
                     deltaSU = coeff * (thisModel.UW_crit[WD_Ind] - flowSepNode1.highNode.expo[radiusIndex].expo[WD_Ind]);
                     AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaSU, "SpdUp", "Expo");
@@ -2357,7 +2447,7 @@ namespace ContinuumNS
                 flowSepNode1 = GetFlowSepNodes(sepNodes1, WD_Ind);
 
                 // Site 1 to Sep Pt 1
-                coeffsDelta = GetDeltaWS_UW_Turbulent(node1Coords, UW1, flowSepNode1, thisModel, true, WD_Ind, radiusIndex, P10_UW, P10_DW);                               
+                coeffsDelta = GetDeltaWS_UW_Turbulent(node1Coords, UW1, flowSepNode1, thisModel, true, WD_Ind, radiusIndex, P10_UW, P10_DW);
 
                 if (flowSepNode1.highNode.expo[radiusIndex].expo[WD_Ind] > thisModel.UW_crit[WD_Ind])
                 { // Sep Pt 1 is uphill
@@ -2383,7 +2473,7 @@ namespace ContinuumNS
 
                     coeff = thisModel.CalcUW_Coeff(P10_UW, P10_DW, WD_Ind, flow2);
                     deltaDH = coeff * (UW2 - 0);
-                    AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaDH, flow2, "Expo");                    
+                    AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaDH, flow2, "Expo");
                 }
 
                 for (int i = 0; i < coeffsDelta.Length; i++)
@@ -2395,7 +2485,7 @@ namespace ContinuumNS
                 flowSepNode1 = GetFlowSepNodes(sepNodes1, WD_Ind);
 
                 // Site 1 to Sep Pt 1
-                coeffsDelta = GetDeltaWS_UW_Turbulent(node1Coords, UW1, flowSepNode1, thisModel, true, WD_Ind, radiusIndex, P10_UW, P10_DW);                               
+                coeffsDelta = GetDeltaWS_UW_Turbulent(node1Coords, UW1, flowSepNode1, thisModel, true, WD_Ind, radiusIndex, P10_UW, P10_DW);
 
                 if (flowSepNode1.highNode.expo[radiusIndex].expo[WD_Ind] < thisModel.UW_crit[WD_Ind])
                 { // Sep Pt 1 is speed-up, Sep Pt 1 to Site 2
@@ -2422,7 +2512,7 @@ namespace ContinuumNS
             { // Scenario 22
                 flowSepNode1 = GetFlowSepNodes(sepNodes1, WD_Ind);
                 // Site 1 to Sep Pt 1
-                coeffsDelta = GetDeltaWS_UW_Turbulent(node1Coords, UW1, flowSepNode1, thisModel, true, WD_Ind, radiusIndex, P10_UW, P10_DW);                              
+                coeffsDelta = GetDeltaWS_UW_Turbulent(node1Coords, UW1, flowSepNode1, thisModel, true, WD_Ind, radiusIndex, P10_UW, P10_DW);
 
                 // Sep Pt 1 to Site 2 
                 if (flowSepNode1.highNode.expo[radiusIndex].expo[WD_Ind] > thisModel.UW_crit[WD_Ind])
@@ -2439,7 +2529,8 @@ namespace ContinuumNS
                     deltaVL = coeff * (UW2 - 0);
                     AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaVL, flow2, "Expo");
                 }
-                else { // Sep Pt 2 is Speed-up
+                else
+                { // Sep Pt 2 is Speed-up
                     coeff = thisModel.CalcUW_Coeff(P10_UW, P10_DW, WD_Ind, "SpdUp");
                     deltaSU = coeff * (0 - flowSepNode1.highNode.expo[radiusIndex].expo[WD_Ind]);
                     AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaSU, "SpdUp", "Expo");
@@ -2454,7 +2545,179 @@ namespace ContinuumNS
                 AddCoeffDeltaWS(ref coeffsDelta, 0, deltaWS, "Total", "Expo");
 
             }
-            
+            else if (flow1 == "Hilltop_UW" && flow2 == "HilltopSpdUp_UW") // New model coefficients 10/28/2026
+            {
+                coeff = thisModel.CalcUW_Coeff(P10_UW, P10_DW, WD_Ind, flow1);
+                deltaUH = coeff * (thisModel.hillTop_UW_crit[WD_Ind] - UW1);
+                AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaUH, flow1, "Expo"); //"Hilltop_UW" to UW_crit
+
+                coeff = thisModel.CalcUW_Coeff(P10_UW, P10_DW, WD_Ind, flow2);
+                deltaSU = coeff * (UW2 - thisModel.hillTop_UW_crit[WD_Ind]);
+                AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaSU, flow2, "Expo"); // UW crit to HilltopSpdUp_UW
+
+                deltaWS = deltaUH + deltaSU;
+                AddCoeffDeltaWS(ref coeffsDelta, 0, deltaWS, "Total", "Expo");
+            }
+            else if (flow1 == "Hilltop_UW" && flow2 == "SlopeDown_UW")
+            {
+                coeff = thisModel.CalcUW_Coeff(P10_UW, P10_DW, WD_Ind, flow1);
+                deltaUH = coeff * (thisModel.hillTop_UW_crit[WD_Ind] - UW1);
+                AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaUH, flow1, "Expo"); //"Hilltop_UW" to UW_crit
+
+                coeff = thisModel.CalcUW_Coeff(P10_UW, P10_DW, WD_Ind, "HilltopSpdUp_UW");
+                deltaSU = coeff * (0 - thisModel.hillTop_UW_crit[WD_Ind]);
+                AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaSU, "SpdUp", "Expo"); //UW_crit to flat
+
+                coeff = thisModel.CalcUW_Coeff(P10_UW, P10_DW, WD_Ind, flow2); // flat to SlopeDown_UW
+                deltaDH = coeff * (UW2 - 0);
+                AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaDH, flow2, "Expo");
+
+                deltaWS = deltaUH + deltaSU + deltaDH;
+                AddCoeffDeltaWS(ref coeffsDelta, 0, deltaWS, "Total", "Expo");
+            }
+            else if (flow1 == "Hilltop_UW" && flow2 == "SlopeUp_UW")
+            {
+                coeff = thisModel.CalcUW_Coeff(P10_UW, P10_DW, WD_Ind, flow1);
+                deltaUH = coeff * (thisModel.hillTop_UW_crit[WD_Ind] - UW1);
+                AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaUH, flow1, "Expo"); // "Hilltop_UW" to UW_crit
+
+                coeff = thisModel.CalcUW_Coeff(P10_UW, P10_DW, WD_Ind, "HilltopSpdUp_UW");
+                deltaSU = coeff * (0 - thisModel.hillTop_UW_crit[WD_Ind]);
+                AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaSU, "SpdUp", "Expo"); // UW_crit to flat                               
+
+                coeff = thisModel.CalcUW_Coeff(P10_UW, P10_DW, WD_Ind, flow2);
+                deltaDH = coeff * (UW2 - 0);
+                AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaDH, flow2, "Expo"); // flat to SlopeUp_UW
+
+                deltaWS = deltaUH + deltaSU + deltaDH;
+                AddCoeffDeltaWS(ref coeffsDelta, 0, deltaWS, "Total", "Expo");
+            }
+            else if (flow1 == "HilltopSpdUp_UW" && flow2 == "Hilltop_UW")
+            {
+                coeff = thisModel.CalcUW_Coeff(P10_UW, P10_DW, WD_Ind, flow1);
+                deltaSU = coeff * (thisModel.hillTop_UW_crit[WD_Ind] - UW1);
+                AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaSU, flow1, "Expo"); // HilltopSpdUp_UW to UW crit
+
+                coeff = thisModel.CalcUW_Coeff(P10_UW, P10_DW, WD_Ind, flow2);
+                deltaUH = coeff * (UW2 - thisModel.hillTop_UW_crit[WD_Ind]);
+                AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaUH, flow2, "Expo"); // UW crit to "Hilltop_UW"
+
+                deltaWS = deltaUH + deltaSU;
+                AddCoeffDeltaWS(ref coeffsDelta, 0, deltaWS, "Total", "Expo");
+            }
+            else if (flow1 == "HilltopSpdUp_UW" && flow2 == "SlopeDown_UW")
+            {
+                coeff = thisModel.CalcUW_Coeff(P10_UW, P10_DW, WD_Ind, flow1); // HilltopSpdUp_UW to flat
+                deltaSU = coeff * (0 - UW1);
+                AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaSU, flow1, "Expo");
+
+                coeff = thisModel.CalcUW_Coeff(P10_UW, P10_DW, WD_Ind, flow2); // Flat to SlopeDown_UW
+                deltaDH = coeff * (UW2 - 0);
+                AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaDH, flow2, "Expo");
+
+                deltaWS = deltaSU + deltaDH;
+                AddCoeffDeltaWS(ref coeffsDelta, 0, deltaWS, "Total", "Expo");
+            }
+            else if (flow1 == "HilltopSpdUp_UW" && flow2 == "SlopeUp_UW")
+            {
+                coeff = thisModel.CalcUW_Coeff(P10_UW, P10_DW, WD_Ind, flow1); // HilltopSpdUp_UW to flat
+                deltaSU = coeff * (0 - UW1);
+                AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaSU, flow1, "Expo");
+
+                coeff = thisModel.CalcUW_Coeff(P10_UW, P10_DW, WD_Ind, flow2); // Flat to SlopeUp_UW
+                deltaUH = coeff * (UW2 - 0);
+                AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaUH, flow2, "Expo");
+
+                deltaWS = deltaSU + deltaUH;
+                AddCoeffDeltaWS(ref coeffsDelta, 0, deltaWS, "Total", "Expo");
+            }
+            else if (flow1 == "SlopeDown_UW" && flow2 == "Hilltop_UW")
+            {
+                coeff = thisModel.CalcUW_Coeff(P10_UW, P10_DW, WD_Ind, flow1); // "SlopeDown_UW" to Flat 
+                deltaDH = coeff * (0 - UW1);
+                AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaDH, flow1, "Expo");
+
+                coeff = thisModel.CalcUW_Coeff(P10_UW, P10_DW, WD_Ind, "HilltopSpdUp_UW"); // Flat to UW crit
+                deltaSU = coeff * (thisModel.hillTop_UW_crit[WD_Ind] - 0);
+                AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaSU, flow2, "Expo");
+
+                coeff = thisModel.CalcUW_Coeff(P10_UW, P10_DW, WD_Ind, flow2); //  UW crit to Hilltop_UW
+                deltaUH = coeff * (UW2 - thisModel.hillTop_UW_crit[WD_Ind]);
+                AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaUH, flow2, "Expo");
+
+                deltaWS = deltaDH + deltaUH + deltaSU;
+                AddCoeffDeltaWS(ref coeffsDelta, 0, deltaWS, "Total", "Expo");
+            }
+            else if (flow1 == "SlopeDown_UW" && flow2 == "HilltopSpdUp_UW")
+            {
+                coeff = thisModel.CalcUW_Coeff(P10_UW, P10_DW, WD_Ind, flow1); // "SlopeDown_UW" to Flat 
+                deltaDH = coeff * (0 - UW1);
+                AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaDH, flow1, "Expo");
+
+                coeff = thisModel.CalcUW_Coeff(P10_UW, P10_DW, WD_Ind, flow2); // Flat to HilltopSpdUp_UW
+                deltaSU = coeff * (UW2 - 0);
+                AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaSU, flow2, "Expo");                              
+
+                deltaWS = deltaDH + deltaSU;
+                AddCoeffDeltaWS(ref coeffsDelta, 0, deltaWS, "Total", "Expo");
+            }
+            else if (flow1 == "SlopeDown_UW" && flow2 == "SlopeUp_UW")
+            {
+                coeff = thisModel.CalcUW_Coeff(P10_UW, P10_DW, WD_Ind, flow1); // "SlopeDown_UW" to Flat 
+                deltaDH = coeff * (0 - UW1);
+                AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaDH, flow1, "Expo");
+
+                coeff = thisModel.CalcUW_Coeff(P10_UW, P10_DW, WD_Ind, flow2); // Flat to SlopeUp_UW
+                deltaUH = coeff * (UW2 - 0);
+                AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaUH, flow2, "Expo");
+
+                deltaWS = deltaDH + deltaUH;
+                AddCoeffDeltaWS(ref coeffsDelta, 0, deltaWS, "Total", "Expo");
+            }
+            else if (flow1 == "SlopeUp_UW" && flow2 == "Hilltop_UW")
+            {
+                coeff = thisModel.CalcUW_Coeff(P10_UW, P10_DW, WD_Ind, flow1); // "SlopeUp_UW" to Flat 
+                deltaDH = coeff * (0 - UW1);
+                AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaDH, flow1, "Expo");
+
+                coeff = thisModel.CalcUW_Coeff(P10_UW, P10_DW, WD_Ind, "HilltopSpdUp_UW"); // Flat to UW crit
+                deltaSU = coeff * (thisModel.hillTop_UW_crit[WD_Ind] - 0);
+                AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaSU, "SpdUp", "Expo");
+
+                coeff = thisModel.CalcUW_Coeff(P10_UW, P10_DW, WD_Ind, flow2); //  UW crit to Hilltop_UW
+                deltaUH = coeff * (UW2 - thisModel.hillTop_UW_crit[WD_Ind]);
+                AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaUH, flow2, "Expo");
+
+                deltaWS = deltaDH + deltaUH + deltaSU;
+                AddCoeffDeltaWS(ref coeffsDelta, 0, deltaWS, "Total", "Expo");
+            }
+            else if (flow1 == "SlopeUp_UW" && flow2 == "HilltopSpdUp_UW")
+            {
+                coeff = thisModel.CalcUW_Coeff(P10_UW, P10_DW, WD_Ind, flow1); // "SlopeUp_UW" to Flat 
+                deltaDH = coeff * (0 - UW1);
+                AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaDH, flow1, "Expo");
+
+                coeff = thisModel.CalcUW_Coeff(P10_UW, P10_DW, WD_Ind, flow2); // Flat to HilltopSpdUp_UW
+                deltaSU = coeff * (UW2 - 0);
+                AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaSU, flow2, "Expo");
+
+                deltaWS = deltaDH + deltaSU;
+                AddCoeffDeltaWS(ref coeffsDelta, 0, deltaWS, "Total", "Expo");
+            }
+            else if (flow1 == "SlopeUp_UW" && flow2 == "SlopeDown_UW")
+            {
+                coeff = thisModel.CalcUW_Coeff(P10_UW, P10_DW, WD_Ind, flow1); // "SlopeUp_UW" to Flat 
+                deltaDH = coeff * (0 - UW1);
+                AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaDH, flow1, "Expo");
+
+                coeff = thisModel.CalcUW_Coeff(P10_UW, P10_DW, WD_Ind, flow2); // Flat to SlopeDown_UW
+                deltaUH = coeff * (UW2 - 0);
+                AddCoeffDeltaWS(ref coeffsDelta, coeff, deltaUH, flow2, "Expo");
+
+                deltaWS = deltaDH + deltaUH;
+                AddCoeffDeltaWS(ref coeffsDelta, 0, deltaWS, "Total", "Expo");
+            }
+
             return coeffsDelta;
         }
 
@@ -2722,7 +2985,7 @@ namespace ContinuumNS
             for (int i = 0; i < numModels; i++)
             {
                 ModelCollection.ModelWeights[] theseWeights = thisInst.modelList.GetWS_EstWeights(thisInst.metList.GetMets(metsUsed, null), targetNode,
-                    models[i].modelsByRad, thisInst.metList.GetAvgWindRoseMetsUsed(metsUsed, models[i].modelsByRad[0].timeOfDay, models[0].modelsByRad[0].season, thisInst.modeledHeight), thisInst.radiiList);
+                    models[i].modelsByRad, thisInst.metList.GetAvgWindRoseMetsUsed(metsUsed, models[i].modelsByRad[0].timeOfDay, models[0].modelsByRad[0].season, thisInst.modeledHeight, thisInst.metList.allMCPd), thisInst.radiiList);
 
                 int oldSize = weights.Length;
                 int newSize = weights.Length + theseWeights.Length;

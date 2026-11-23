@@ -194,7 +194,7 @@ namespace ContinuumNS
                        
             NodeCollection nodeList = new NodeCollection();
             Nodes MapNode = nodeList.GetMapAsNode(thisMapNode);
-            ModelCollection.ModelWeights[] indivMetWeights = modelList.GetWS_EstWeights(predMets, MapNode, models, metList.GetAvgWindRose(thisInst.modeledHeight, Met.TOD.All, Met.Season.All), thisInst.radiiList);
+            ModelCollection.ModelWeights[] indivMetWeights = modelList.GetWS_EstWeights(predMets, MapNode, models, metList.GetAvgWindRose(thisInst.modeledHeight, Met.TOD.All, Met.Season.All, metList.allMCPd), thisInst.radiiList);
 
             for (int r = 0; r < numRadii; r++)
             { 
@@ -242,7 +242,7 @@ namespace ContinuumNS
             thisMapNode.sectDist = new double[numWD, numWS];
 
             for (int WD = 0; WD < numWD; WD++) {
-                double[] WS_Dist = metList.CalcWS_DistForTurbOrMap(metsUsed, thisMapNode.sectorWS[WD], WD, Met.TOD.All, Met.Season.All, height);
+                double[] WS_Dist = metList.CalcWS_DistForTurbOrMap(metsUsed, thisMapNode.sectorWS[WD], WD, Met.TOD.All, Met.Season.All, height, metList.allMCPd);
                 for (int WS = 0; WS < numWS; WS++)
                     thisMapNode.sectDist[WD, WS] = WS_Dist[WS];
                 

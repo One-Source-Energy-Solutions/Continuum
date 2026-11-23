@@ -605,7 +605,7 @@ namespace ContinuumNS
             double maxDir = 100;
 
             int numMets = thisInst.metList.ThisCount;
-            double[] windRose = thisInst.metList.GetAvgWindRose(thisInst.modeledHeight, model.timeOfDay, model.season);
+            double[] windRose = thisInst.metList.GetAvgWindRose(thisInst.modeledHeight, model.timeOfDay, model.season, thisInst.metList.allMCPd);
             int radiusIndex = thisInst.radiiList.GetRadiusInd(model.radius);
 
             bool foundNode = false;

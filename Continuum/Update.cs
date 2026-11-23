@@ -9,6 +9,7 @@ using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Security.Cryptography.Pkcs;
+using System.Threading;
 using System.Windows.Controls.Primitives;
 using System.Windows.Forms;
 using static ContinuumNS.Met;
@@ -1113,7 +1114,15 @@ namespace ContinuumNS
             thisInst.dataMetTowers.Columns.Clear();
             thisInst.dataMetTowers.Columns.Add("colMetName", "Met Name");
             thisInst.dataMetTowers.Columns["colMetName"].Width = 80;
-           
+
+            if (thisInst.cboShowMeasOrLT.SelectedItem == null)
+                thisInst.cboShowMeasOrLT.SelectedIndex = 0;
+
+            string measOrLT = thisInst.cboShowMeasOrLT.SelectedItem.ToString();
+            bool isLT_Est = false;
+            if (measOrLT == "LT")
+                isLT_Est = true;
+
             thisInst.chkMetLabels.Items.Clear(); // Clear met label table
             thisInst.chkMetlabelsStep.Items.Clear(); // Clear met label table for stepwise tab
             thisInst.chkMetLabels_Maps.Items.Clear();            
@@ -1178,14 +1187,15 @@ namespace ContinuumNS
                 for (int j = 0; j < numMets; j++) // Now repopulate it with met towers
                 {
                     thisMet = thisInst.metList.metItem[j];
-                    Met.WSWD_Dist thisDist = thisMet.GetWS_WD_Dist(thisInst.modeledHeight, Met.TOD.All, Met.Season.All);
-                    Met.WSWD_Dist measDist = new WSWD_Dist();
+                    Met.WSWD_Dist thisMeasDist = thisMet.GetWS_WD_Dist(thisInst.modeledHeight, Met.TOD.All, Met.Season.All, false);
+                    Met.WSWD_Dist thisLT_Dist = new WSWD_Dist();
 
-                    if (thisInst.metList.isTimeSeries)
+                    if (thisInst.metList.isTimeSeries && thisInst.metList.metItem[j].isMCPd)
                     {
-              //          if (thisMet.metData.GetNumAnems() > 0)
-              //              if (thisMet.metData.anems[0].windData != null)
-                                 measDist = thisMet.CalcMeas_WSWD_Dists(thisInst.modeledHeight, Met.TOD.All, Met.Season.All, thisInst, thisMet.metData.GetSimulatedTimeSeries(thisInst.modeledHeight));
+                        thisLT_Dist = thisMet.GetWS_WD_Dist(thisInst.modeledHeight, Met.TOD.All, Met.Season.All, true);
+                        //          if (thisMet.metData.GetNumAnems() > 0)
+                        //              if (thisMet.metData.anems[0].windData != null)
+                        //    measDist = thisMet.CalcMeas_WSWD_Dists(thisInst.modeledHeight, Met.TOD.All, Met.Season.All, thisInst, thisMet.metData.GetSimulatedTimeSeries(thisInst.modeledHeight));
                     }
                     int rowInd = thisInst.dataMetTowers.Rows.Add();
                     thisInst.dataMetTowers.Rows[rowInd].Cells["colMetName"].Value = thisMet.name;
@@ -1207,13 +1217,13 @@ namespace ContinuumNS
                         UTM_conversion.Lat_Long thisLL = thisInst.UTM_conversions.UTMtoLL(thisMet.UTMX, thisMet.UTMY);
                         int thisOffset = thisInst.UTM_conversions.GetUTC_Offset(thisLL.latitude, thisLL.longitude);
                         thisInst.dataMetTowers.Rows[rowInd].Cells["colUTCOffset"].Value = thisOffset;
-                        thisInst.dataMetTowers.Rows[rowInd].Cells["colMeasWS"].Value = Math.Round(measDist.WS, ContinuumStyle.GetNumDecimals("WS")).ToString($"N{ContinuumStyle.GetNumDecimals("WS")}", CultureInfo.InvariantCulture);
                     }
-                    else                    
-                        thisInst.dataMetTowers.Rows[rowInd].Cells["colMeasWS"].Value = Math.Round(thisDist.WS, ContinuumStyle.GetNumDecimals("WS")).ToString($"N{ContinuumStyle.GetNumDecimals("WS")}", CultureInfo.InvariantCulture);
+                    
+                    thisInst.dataMetTowers.Rows[rowInd].Cells["colMeasWS"].Value = Math.Round(thisMeasDist.WS, ContinuumStyle.GetNumDecimals("WS")).ToString($"N{ContinuumStyle.GetNumDecimals("WS")}", CultureInfo.InvariantCulture);
 
-                    if (oneHasLT && thisDist.WS != measDist.WS)
-                        thisInst.dataMetTowers.Rows[rowInd].Cells["colLTEstWS"].Value = Math.Round(thisDist.WS, ContinuumStyle.GetNumDecimals("WS")).ToString($"N{ContinuumStyle.GetNumDecimals("WS")}", CultureInfo.InvariantCulture);
+
+                    if (oneHasLT && thisLT_Dist.WS != 0)
+                        thisInst.dataMetTowers.Rows[rowInd].Cells["colLTEstWS"].Value = Math.Round(thisLT_Dist.WS, ContinuumStyle.GetNumDecimals("WS")).ToString($"N{ContinuumStyle.GetNumDecimals("WS")}", CultureInfo.InvariantCulture);
 
                     thisInst.chkMetLabels.Items.Add(thisMet.name, true);
                     thisInst.chkMetlabelsStep.Items.Add(thisMet.name, true);
@@ -1288,6 +1298,9 @@ namespace ContinuumNS
             int numPairs = thisInst.metPairList.PairCount;
             int radiusInd = thisInst.GetRadiusInd("Advanced");
             int WD_Ind = thisInst.GetWD_ind("Advanced");
+            bool isLT_Est = false;
+            if (thisInst.metList.allMCPd)
+                isLT_Est = true;
 
             if (thisInst.metList.ThisCount == 0 || thisInst.metList.expoIsCalc == false)
             {
@@ -1327,7 +1340,7 @@ namespace ContinuumNS
                         int rowInd = thisInst.dataModCrossPred.Rows.Add();
                         thisInst.dataModCrossPred.Rows[rowInd].Cells[0].Value = thisPair.met1.name;
                         thisInst.dataModCrossPred.Rows[rowInd].Cells[1].Value = thisPair.met2.name;
-                        Met.WSWD_Dist dist2 = thisPair.met2.GetWS_WD_Dist(thisInst.modeledHeight, thisTOD, thisSeason);
+                        Met.WSWD_Dist dist2 = thisPair.met2.GetWS_WD_Dist(thisInst.modeledHeight, thisTOD, thisSeason, isLT_Est);
 
                         if (WD_Ind == numWD)
                         {
@@ -1344,7 +1357,7 @@ namespace ContinuumNS
                         rowInd = thisInst.dataModCrossPred.Rows.Add();
                         thisInst.dataModCrossPred.Rows[rowInd].Cells[0].Value = thisPair.met2.name;
                         thisInst.dataModCrossPred.Rows[rowInd].Cells[1].Value = thisPair.met1.name;
-                        Met.WSWD_Dist dist1 = thisPair.met1.GetWS_WD_Dist(thisInst.modeledHeight, thisTOD, thisSeason);
+                        Met.WSWD_Dist dist1 = thisPair.met1.GetWS_WD_Dist(thisInst.modeledHeight, thisTOD, thisSeason, isLT_Est);
 
                         if (WD_Ind == numWD)
                         {
@@ -1406,8 +1419,10 @@ namespace ContinuumNS
 
             string startMetStr = thisInst.GetStartMetAdvanced();
             string endMetStr = thisInst.GetEndSiteAdvanced();
-            int numPairs = thisInst.metPairList.PairCount;            
-
+            int numPairs = thisInst.metPairList.PairCount;
+            bool isLT_Est = false;
+            if (thisInst.metList.allMCPd)
+                isLT_Est = true;
             int radiusIndex = thisInst.GetRadiusInd("Advanced");
             Met.TOD thisTOD = thisInst.GetSelectedTOD("Advanced");
             Met.Season thisSeason = thisInst.GetSelectedSeason("Advanced");
@@ -1662,7 +1677,7 @@ namespace ContinuumNS
             for (int i = 0; i < numMets; i++)
             {
                 Met thisMet = thisInst.metList.metItem[i];
-                Met.WSWD_Dist thisDist = thisMet.GetWS_WD_Dist(thisInst.modeledHeight, thisTOD, thisSeason);
+                Met.WSWD_Dist thisDist = thisMet.GetWS_WD_Dist(thisInst.modeledHeight, thisTOD, thisSeason, isLT_Est);
 
                 if (thisMet.name == startMetStr)
                 {
@@ -1853,10 +1868,14 @@ namespace ContinuumNS
             node1Coords.UTMY = startNode.UTMY;
             NodeCollection.Node_UTMs node2Coords = new NodeCollection.Node_UTMs();
 
+            bool isLT_Est = false;
+            if (thisInst.metList.allMCPd)
+                isLT_Est = true;
+
             Met.TOD thisTOD = thisInst.GetSelectedTOD("Advanced");
             Met.Season thisSeason = thisInst.GetSelectedSeason("Advanced");
-            double[] startNodeWindRose = thisInst.metList.GetInterpolatedWindRose(thisInst.metList.GetMetsUsed(), startNode.UTMX, startNode.UTMY, thisTOD, thisSeason, thisInst.modeledHeight);
-            double[] endNodeWindRose = thisInst.metList.GetInterpolatedWindRose(thisInst.metList.GetMetsUsed(), endNode.UTMX, endNode.UTMY, thisTOD, thisSeason, thisInst.modeledHeight);
+            double[] startNodeWindRose = thisInst.metList.GetInterpolatedWindRose(thisInst.metList.GetMetsUsed(), startNode.UTMX, startNode.UTMY, thisTOD, thisSeason, thisInst.modeledHeight, isLT_Est);
+            double[] endNodeWindRose = thisInst.metList.GetInterpolatedWindRose(thisInst.metList.GetMetsUsed(), endNode.UTMX, endNode.UTMY, thisTOD, thisSeason, thisInst.modeledHeight, isLT_Est);
 
             if (pathOfNodes != null)
                 numNodes = pathOfNodes.Length;
@@ -1947,7 +1966,7 @@ namespace ContinuumNS
             }
             else
             {
-                double[] pathOfNodesWindRose = thisInst.metList.GetInterpolatedWindRose(thisInst.metList.GetMetsUsed(), pathOfNodes[0].UTMX, pathOfNodes[0].UTMY, thisTOD, thisSeason, thisInst.modeledHeight);
+                double[] pathOfNodesWindRose = thisInst.metList.GetInterpolatedWindRose(thisInst.metList.GetMetsUsed(), pathOfNodes[0].UTMX, pathOfNodes[0].UTMY, thisTOD, thisSeason, thisInst.modeledHeight, isLT_Est);
                 WS_Equiv = thisInst.modelList.GetWS_Equiv(startNodeWindRose, pathOfNodesWindRose, sectWS_1);
                 node2Coords.UTMX = pathOfNodes[0].UTMX;
                 node2Coords.UTMY = pathOfNodes[0].UTMY;
@@ -1988,7 +2007,7 @@ namespace ContinuumNS
                 node2 = pathOfNodes[i];
                 node2Coords.UTMX = pathOfNodes[i].UTMX;
                 node2Coords.UTMY = pathOfNodes[i].UTMY;
-                double[] node2WindRose = thisInst.metList.GetInterpolatedWindRose(thisInst.metList.GetMetsUsed(), node2.UTMX, node2.UTMY, thisTOD, thisSeason, thisInst.modeledHeight);
+                double[] node2WindRose = thisInst.metList.GetInterpolatedWindRose(thisInst.metList.GetMetsUsed(), node2.UTMX, node2.UTMY, thisTOD, thisSeason, thisInst.modeledHeight, isLT_Est);
 
                 // Calculate equivalent wind speed at predictor based on target wind rose
                 WS_Equiv = thisInst.modelList.GetWS_Equiv(WR_Pred, node2WindRose, sectWS_1);
@@ -2947,6 +2966,7 @@ namespace ContinuumNS
             thisInst.txtSectRMS.Text = "";
             int numModels = thisInst.modelList.ModelCount;
             string[] metsUsed = thisInst.metList.GetMetsUsed();
+            bool isLT = thisInst.metList.allMCPd;
 
             bool isImported = false;
             if (numModels > 0)
@@ -2982,7 +3002,7 @@ namespace ContinuumNS
             {
                 if (thisInst.metList.ThisCount > 1 && WD_Ind == numWD)
                 {
-                    double thisErr = thisModel.CalcRMS_SectorsEstError(Wgt_or_No, thisInst.metList.GetAvgWindRose(thisInst.modeledHeight, thisTOD, thisSeason));
+                    double thisErr = thisModel.CalcRMS_SectorsEstError(Wgt_or_No, thisInst.metList.GetAvgWindRose(thisInst.modeledHeight, thisTOD, thisSeason, isLT));
                     thisInst.txtSectRMS.Text = Math.Round(thisErr, 5).ToString("P");
                 }
                 else if (WD_Ind != numWD)
@@ -3852,6 +3872,11 @@ namespace ContinuumNS
             Met.TOD thisTOD = thisInst.GetSelectedTOD("Summary");
             Met.Season thisSeason = thisInst.GetSelectedSeason("Summary");
 
+            // Maybe have a dropdown to show either measured or LT distributions? For now show LT if all mets have MCP estimates
+            bool isLT_Est = false;
+            if (thisInst.metList.allMCPd)
+                isLT_Est = true;
+
             if (WD_Ind > numWD) return;
 
             Met[] checkedMets = thisInst.GetCheckedMets("Summary");
@@ -3863,7 +3888,7 @@ namespace ContinuumNS
             for (int i = 0; i < checkedMets.Length; i++)
             {
                 Met thisMet = checkedMets[i];
-                Met.WSWD_Dist thisDist = thisMet.GetWS_WD_Dist(thisInst.modeledHeight, thisTOD, thisSeason);
+                Met.WSWD_Dist thisDist = thisMet.GetWS_WD_Dist(thisInst.modeledHeight, thisTOD, thisSeason, isLT_Est);
 
                 int rowInd = thisInst.dataMetSummary.Rows.Add();
                 thisInst.dataMetSummary.Rows[rowInd].Cells[0].Value = thisMet.name;
@@ -3926,7 +3951,7 @@ namespace ContinuumNS
             for (int i = 0; i < metCount; i++)
             {
                 Met thisMet = checkedMets[i];
-                Met.WSWD_Dist thisDist = thisMet.GetWS_WD_Dist(thisInst.modeledHeight, thisTOD, thisSeason);
+                Met.WSWD_Dist thisDist = thisMet.GetWS_WD_Dist(thisInst.modeledHeight, thisTOD, thisSeason, isLT_Est);
 
                 if (WD_Ind < numWD)
                 {
@@ -4236,7 +4261,9 @@ namespace ContinuumNS
 
             string powerCurve = "";
             bool AEP_calc = false;
-
+            bool isLT_Est = false;
+            if (thisInst.metList.allMCPd)
+                isLT_Est = true;
             if (thisInst.metList.ThisCount == 0) return;
             int numWD = thisInst.GetNumWD();
             int WD_Ind = thisInst.GetWD_ind("Gross");
@@ -4283,7 +4310,7 @@ namespace ContinuumNS
             {
                 double metAEP = 0;
                 Met thisMet = thisInst.metList.metItem[i];
-                Met.WSWD_Dist thisDist = thisMet.GetWS_WD_Dist(thisInst.modeledHeight, Met.TOD.All, Met.Season.All);
+                Met.WSWD_Dist thisDist = thisMet.GetWS_WD_Dist(thisInst.modeledHeight, Met.TOD.All, Met.Season.All, isLT_Est);
                 MetCollection.Weibull_params weibull = thisInst.metList.CalcWeibullParams(thisDist.WS_Dist, thisDist.sectorWS_Dist, thisDist.WS);
 
                 if (AEP_calc == true)
@@ -4526,6 +4553,10 @@ namespace ContinuumNS
             thisInst.dataGrossHisto.Rows.Clear();
             thisInst.dataGrossHisto.Columns.Clear();
 
+            thisInst.plotGrossHisto.Model = new PlotModel();
+            var model = thisInst.plotGrossHisto.Model;
+            model.IsLegendVisible = false;
+
             // Get selected parameter            
             MetCollection metList = thisInst.metList;
             string selectParam = thisInst.cboGrossParam.SelectedItem.ToString();
@@ -4534,14 +4565,17 @@ namespace ContinuumNS
             Turbine[] checkedTurbines = thisInst.GetCheckedTurbs("Gross");
 
             if (checkedMets == null)
+            {
+                thisInst.plotGrossHisto.Refresh();
                 return;
+            }
 
             int checkedMetCount = checkedMets.Length;
             int checkedTurbCount = checkedTurbines.Length;
-
-            thisInst.plotGrossHisto.Model = new PlotModel();
-            var model = thisInst.plotGrossHisto.Model;
-            model.IsLegendVisible = false;
+            bool isLT_Est = false;
+            if (thisInst.metList.allMCPd)
+                isLT_Est = true;
+            
 
             if (metList.ThisCount == 0 || (checkedMetCount == 0 && checkedTurbCount == 0))
             {
@@ -4605,7 +4639,7 @@ namespace ContinuumNS
 
             for (int i = 0; i <= checkedMetCount - 1; i++)
             {
-                Met.WSWD_Dist thisDist = checkedMets[i].GetWS_WD_Dist(thisInst.modeledHeight, Met.TOD.All, Met.Season.All);
+                Met.WSWD_Dist thisDist = checkedMets[i].GetWS_WD_Dist(thisInst.modeledHeight, Met.TOD.All, Met.Season.All, isLT_Est);
 
                 if (selectParam == "Wind Speed")
                 {
@@ -5218,6 +5252,10 @@ namespace ContinuumNS
             double minWS = 100;
             double maxWS = -100;
 
+            bool isLT_Est = false;
+            if (thisInst.metList.allMCPd)
+                isLT_Est = true;
+
             if (checkedMets != null)
             {
                 for (int i = 0; i < checkedMets.Length; i++)
@@ -5229,7 +5267,7 @@ namespace ContinuumNS
                     metDataSeries.MarkerFill = OxyColors.Red;
                     model.Series.Add(metDataSeries);
 
-                    Met.WSWD_Dist thisDist = checkedMets[i].GetWS_WD_Dist(thisInst.modeledHeight, thisTOD, thisSeason);
+                    Met.WSWD_Dist thisDist = checkedMets[i].GetWS_WD_Dist(thisInst.modeledHeight, thisTOD, thisSeason, isLT_Est);
 
                     if (checkedMets[i].expo != null)
                     {
@@ -5912,6 +5950,11 @@ namespace ContinuumNS
             model.IsLegendVisible = false;
 
             Met[] checkedMets = thisInst.GetCheckedMets("Gross");
+            if (checkedMets == null)
+            {
+                thisInst.plotGrossWindRose.Refresh();
+                return;
+            }
             int checkedMetCount = checkedMets.Length;
 
             Turbine[] checkedTurbines = thisInst.GetCheckedTurbs("Gross");
@@ -5920,6 +5963,10 @@ namespace ContinuumNS
             int metCount = thisInst.metList.ThisCount;
             if (metCount == 0) return;
             int numWD = thisInst.GetNumWD();
+
+            bool isLT = false;
+            if (thisInst.cboShowMeasOrLT.SelectedItem.ToString() == "LT")
+                isLT = true;
 
             model.Axes.Add(new AngleAxis
             {
@@ -5938,7 +5985,7 @@ namespace ContinuumNS
 
             for (int j = 0; j < checkedMetCount; j++)
             {
-                Met.WSWD_Dist thisDist = checkedMets[j].GetWS_WD_Dist(thisInst.modeledHeight, Met.TOD.All, Met.Season.All);
+                Met.WSWD_Dist thisDist = checkedMets[j].GetWS_WD_Dist(thisInst.modeledHeight, Met.TOD.All, Met.Season.All, isLT);
 
                 var metSeries = new LineSeries();
                 SortedList<double, double> ii = new SortedList<double, double>();
@@ -6014,6 +6061,8 @@ namespace ContinuumNS
             Met[] checkedMets = thisInst.GetCheckedMets("Gross");
             int checkedMetCount = checkedMets.Length;
 
+            bool isLT_Est = thisInst.metList.allMCPd;
+
             Turbine[] checkedTurbines = thisInst.GetCheckedTurbs("Gross");
             int checkedTurbCount = checkedTurbines.Length;
 
@@ -6041,7 +6090,7 @@ namespace ContinuumNS
                     metSeries.Title = checkedMets[i].name;
                     model.Series.Add(metSeries);
 
-                    Met.WSWD_Dist thisDist = checkedMets[i].GetWS_WD_Dist(thisInst.modeledHeight, Met.TOD.All, Met.Season.All);
+                    Met.WSWD_Dist thisDist = checkedMets[i].GetWS_WD_Dist(thisInst.modeledHeight, Met.TOD.All, Met.Season.All, isLT_Est);
 
                     for (int WS_ind = 0; WS_ind < numWS; WS_ind++)
                     {
@@ -6974,6 +7023,7 @@ namespace ContinuumNS
             int radiusInd = thisInst.GetRadiusInd("Advanced");
             Met.TOD thisTOD = thisInst.GetSelectedTOD("Advanced");
             Met.Season thisSeason = thisInst.GetSelectedSeason("Advanced");
+            bool isLT_Est = thisInst.metList.allMCPd;
 
             Model[] theseModels = thisInst.modelList.GetModels(thisInst, thisInst.metList.GetMetsUsed(), thisTOD, thisSeason,
                 thisInst.modeledHeight, false);
@@ -7040,9 +7090,9 @@ namespace ContinuumNS
             }
             else if (thisInst.metList.ThisCount > 0)
             {
-                UW_critical = thisModel.CalcOverallUWCrit(thisInst.metList.GetAvgWindRose(thisInst.modeledHeight, thisTOD, thisSeason));
-                sepCrit = thisModel.CalcOverallSepCrit(thisInst.metList.GetAvgWindRose(thisInst.modeledHeight, thisTOD, thisSeason));
-                sepCritWS = thisModel.CalcOverallSepCritWS(thisInst.metList.GetAvgWindRose(thisInst.modeledHeight, thisTOD, thisSeason));
+                UW_critical = thisModel.CalcOverallUWCrit(thisInst.metList.GetAvgWindRose(thisInst.modeledHeight, thisTOD, thisSeason, isLT_Est));
+                sepCrit = thisModel.CalcOverallSepCrit(thisInst.metList.GetAvgWindRose(thisInst.modeledHeight, thisTOD, thisSeason, isLT_Est));
+                sepCritWS = thisModel.CalcOverallSepCritWS(thisInst.metList.GetAvgWindRose(thisInst.modeledHeight, thisTOD, thisSeason, isLT_Est));
             }
 
             thisInst.txtUWCrit.Text = "";
@@ -7604,6 +7654,14 @@ namespace ContinuumNS
             if (thisInst.cboWindOrEnergy.SelectedItem == null)
                 thisInst.cboWindOrEnergy.SelectedIndex = 0;
 
+            if (thisInst.cboShowMeasOrLT.SelectedItem == null)
+                thisInst.cboShowMeasOrLT.SelectedIndex = 0;
+
+            string measOrLT = thisInst.cboShowMeasOrLT.SelectedItem.ToString();
+            bool showLT = false;
+            if (measOrLT == "LT")
+                showLT = true;
+
             string windOrEnergy = thisInst.cboWindOrEnergy.SelectedItem.ToString();
 
             thisInst.plotInputWindRose.Model = new PlotModel();
@@ -7638,7 +7696,7 @@ namespace ContinuumNS
 
                 for (int i = 0; i < metCount; i++)
                 {
-                    Met.WSWD_Dist thisDist = checkedMets[i].GetWS_WD_Dist(thisInst.modeledHeight, Met.TOD.All, Met.Season.All);
+                    Met.WSWD_Dist thisDist = checkedMets[i].GetWS_WD_Dist(thisInst.modeledHeight, Met.TOD.All, Met.Season.All, showLT);
 
                     if (thisDist.windRose == null)
                         continue;
@@ -7677,6 +7735,9 @@ namespace ContinuumNS
         /// <summary> Updates directional WS ratio plot on Input tab. </summary>
         public void DirectionalWS_Ratios()
         {
+            bool isLT_Est = false;
+            if (thisInst.cboShowMeasOrLT.SelectedItem.ToString() == "LT")
+                isLT_Est = true;
             thisInst.plotDirectionalWS_Ratios.Model = new PlotModel();
             var model = thisInst.plotDirectionalWS_Ratios.Model;
             ContinuumStyle.StylePlot(thisInst.plotDirectionalWS_Ratios);
@@ -7714,7 +7775,7 @@ namespace ContinuumNS
                 for (int i = 0; i < checkedMets.Length; i++)
                 {
                     Color lineColor = GetMetOrTurbColor(i);
-                    Met.WSWD_Dist thisDist = checkedMets[i].GetWS_WD_Dist(thisInst.modeledHeight, Met.TOD.All, Met.Season.All);
+                    Met.WSWD_Dist thisDist = checkedMets[i].GetWS_WD_Dist(thisInst.modeledHeight, Met.TOD.All, Met.Season.All, isLT_Est);
 
                     if (thisDist.sectorWS_Dist == null)
                         continue;
@@ -13974,6 +14035,12 @@ namespace ContinuumNS
             if (thisMet.name == null)
                 return;
 
+            if (thisMet.metData == null)
+            {
+                thisInst.cboExtremeWS_Height.Items.Clear();
+                return;
+            }
+
             Met.Extreme_WindSpeed extremeWS = thisMet.CalcExtremeWindSpeeds(thisInst);
 
             // Reset Gumbel distribution plot
@@ -14359,7 +14426,8 @@ namespace ContinuumNS
 
             double hubH = thisInst.modeledHeight;
             int numWD = thisInst.metList.numWD;
-            double[] energyRose = thisInst.metList.GetAvgEnergyRose(thisInst.modeledHeight, Met.TOD.All, Met.Season.All, thisInst.metList.numWD);            
+            bool isLT = thisInst.metList.allMCPd;
+            double[] energyRose = thisInst.metList.GetAvgEnergyRose(thisInst.modeledHeight, Met.TOD.All, Met.Season.All, thisInst.metList.numWD, isLT);            
             double[] refEnergyRose = thisInst.refList.CalcAvgEnergyRose(thisInst.UTM_conversions, numWD, thisInst.modelList.airDens, thisInst.modelList.rotorDiam);            
 
             if (energyRose == null)
@@ -14438,7 +14506,8 @@ namespace ContinuumNS
                     TerrainComplexityHistogram();
                 }
 
-                double[] energyRose = thisInst.metList.GetAvgEnergyRose(thisInst.modeledHeight, Met.TOD.All, Met.Season.All, thisInst.metList.numWD);
+                bool isLT_Est = thisInst.metList.allMCPd;
+                double[] energyRose = thisInst.metList.GetAvgEnergyRose(thisInst.modeledHeight, Met.TOD.All, Met.Season.All, thisInst.metList.numWD, isLT_Est);
 
                 if (energyRose == null)
                     energyRose = thisInst.refList.CalcAvgEnergyRose(thisInst.UTM_conversions, thisInst.metList.numWD, thisInst.modelList.airDens, thisInst.modelList.rotorDiam);
@@ -14476,6 +14545,7 @@ namespace ContinuumNS
             thisInst.plotComplexHisto.Model = new PlotModel();
             var model = thisInst.plotComplexHisto.Model;
             model.IsLegendVisible = false;
+            bool isLT_Est = thisInst.metList.allMCPd;
 
             // Specify axes
             CategoryAxis xAxis = new CategoryAxis();
@@ -14491,7 +14561,7 @@ namespace ContinuumNS
             ColumnSeries complexHisto = new ColumnSeries();            
             model.Series.Add(complexHisto);
 
-            double[] energyRose = thisInst.metList.GetAvgEnergyRose(thisInst.modeledHeight, Met.TOD.All, Met.Season.All, thisInst.metList.numWD);
+            double[] energyRose = thisInst.metList.GetAvgEnergyRose(thisInst.modeledHeight, Met.TOD.All, Met.Season.All, thisInst.metList.numWD, isLT_Est);
 
             if (energyRose == null)
                 energyRose = thisInst.refList.CalcAvgEnergyRose(thisInst.UTM_conversions, thisInst.metList.numWD, thisInst.modelList.airDens, thisInst.modelList.rotorDiam);
@@ -16570,14 +16640,18 @@ namespace ContinuumNS
                 thisInst.txtDebiasSlope.Text = Math.Round(avgSlopeInt[0], 3).ToString();
                 thisInst.txtDebiasIntercept.Text = Math.Round(avgSlopeInt[1], 3).ToString();
                 thisInst.txtDebiasRSq.Text = "";
+                thisInst.txtDebiasUsingMets.Text = thisMCP.debiasData.otherMetNameString;
             }
             else
-            {
+            {                
                 thisInst.txtDebiasSlope.Text = Math.Round(thisMCP.debiasData.slope, 3).ToString();
                 thisInst.txtDebiasIntercept.Text = Math.Round(thisMCP.debiasData.intercept, 3).ToString();
                 thisInst.txtDebiasRSq.Text = Math.Round(thisMCP.debiasData.R_sq, 3).ToString();
+                thisInst.txtDebiasUsingMets.Text = "";
             }
-            
+
+            thisInst.chkUsingMetsForDebias.Checked = thisMCP.debiasData.useOtherMets;
+            thisInst.plotMCP_Debias.Refresh();
         }
 
     }

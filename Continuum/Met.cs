@@ -45,6 +45,8 @@ namespace ContinuumNS
         [Serializable()]
         public struct WSWD_Dist
         {
+            /// <summary> True if WSWD distribution was calculated from MCP estimate </summary>
+            public bool isLT_Est;
             /// <summary> Time of day: Day, Night, or All </summary>
             public TOD timeOfDay;
             /// <summary> Season :Winter, Spring, Summer, Fall, or All </summary>
@@ -276,7 +278,7 @@ namespace ContinuumNS
         public void AddWSWD_DistFromTAB(TOD thisTOD, Season thisSeason, double height, double[,] sectorWS_Dist, double[] windRose)
         {            
             
-            if (AlreadyHaveWSWD_Dist(thisTOD, thisSeason, height) == false)
+            if (AlreadyHaveWSWD_Dist(thisTOD, thisSeason, height, false) == false)
             {
                 Array.Resize(ref WSWD_Dists, WSWD_DistCount + 1);
                 WSWD_Dists[WSWD_DistCount - 1] = new WSWD_Dist();
@@ -291,7 +293,7 @@ namespace ContinuumNS
         /// <summary> Adds wind speed / wind direction distribution to Met's list of WSWD_Dists from met time series input </summary>
         public void AddWSWD_Dist(WSWD_Dist thisDist)
         {            
-            if (AlreadyHaveWSWD_Dist(thisDist.timeOfDay, thisDist.season, thisDist.height) == false)
+            if (AlreadyHaveWSWD_Dist(thisDist.timeOfDay, thisDist.season, thisDist.height, thisDist.isLT_Est) == false)
             {
                 Array.Resize(ref WSWD_Dists, WSWD_DistCount + 1);
                 WSWD_Dists[WSWD_DistCount - 1] = thisDist;                
@@ -299,12 +301,12 @@ namespace ContinuumNS
         }
 
         /// <summary> Returns true if WSWD distribution with specified height, time of day, season, and power curve has been created already. </summary> 
-        public bool AlreadyHaveWSWD_Dist(TOD thisTOD, Season thisSeason, double height)
+        public bool AlreadyHaveWSWD_Dist(TOD thisTOD, Season thisSeason, double height, bool isLT_Est)
         {
             bool alreadyGotIt = false;
             
             for (int i = 0; i < WSWD_DistCount; i++)
-                if (WSWD_Dists[i].height == height && WSWD_Dists[i].season == thisSeason && WSWD_Dists[i].timeOfDay == thisTOD)
+                if (WSWD_Dists[i].height == height && WSWD_Dists[i].season == thisSeason && WSWD_Dists[i].timeOfDay == thisTOD && WSWD_Dists[i].isLT_Est == isLT_Est)
                     alreadyGotIt = true;
             
             return alreadyGotIt;
@@ -365,7 +367,7 @@ namespace ContinuumNS
         /// ONLY USED FOR TAB FILE CALCS (i.e. all time of day and all seasons) </summary>
         public void CalcAvgWS(Continuum thisInst)
         {                         
-            int WSWDind = GetWS_WD_DistInd(thisInst.modeledHeight, TOD.All, Season.All);                      
+            int WSWDind = GetWS_WD_DistInd(thisInst.modeledHeight, TOD.All, Season.All, false);                      
             WSWD_Dists[WSWDind].WS_Dist = new double[thisInst.metList.numWS];
                        
             // Calculate overall wind speed distribution
@@ -397,7 +399,7 @@ namespace ContinuumNS
         /// <summary> Calculate directional wind speed ratios from TAB file. ONLY USED FOR TAB FILE CALCS (i.e. all time of day and all seasons) </summary>
         public void CalcSectorWS_Ratios(Continuum thisInst)
         {            
-            int WSWD_ind = GetWS_WD_DistInd(thisInst.modeledHeight, TOD.All, Season.All);
+            int WSWD_ind = GetWS_WD_DistInd(thisInst.modeledHeight, TOD.All, Season.All, false);
             if (WSWD_Dists[WSWD_ind].windRose == null || WSWD_Dists[WSWD_ind].WS == 0) return;
 
             int numWS = thisInst.metList.numWS;
@@ -421,11 +423,11 @@ namespace ContinuumNS
                 WSWD_Dists[WSWD_ind].sectorWS_Ratio[i] = WS_by_dir[i] / WSWD_Dists[WSWD_ind].WS;
         }
 
-        public void CalcEnergyRose(Continuum thisInst)
+        public void CalcEnergyRose(Continuum thisInst, bool isLT_Est)
         {
             // Calculate energy rose from TAB file
-            WSWD_Dist thisDist = GetWS_WD_Dist(thisInst.modeledHeight, TOD.All, Season.All);
-            int thisDistInd = GetWS_WD_DistInd(thisInst.modeledHeight, TOD.All, Season.All);
+            WSWD_Dist thisDist = GetWS_WD_Dist(thisInst.modeledHeight, TOD.All, Season.All, isLT_Est);
+            int thisDistInd = GetWS_WD_DistInd(thisInst.modeledHeight, TOD.All, Season.All, isLT_Est);
             WSWD_Dists[thisDistInd].energyRose = new double[thisInst.metList.numWD];
             double sumPower = 0;
 
@@ -453,19 +455,19 @@ namespace ContinuumNS
         }
 
         /// <summary> Gets WS/WD distribution for specified height, time of day, and season  </summary>
-        public WSWD_Dist GetWS_WD_Dist(double thisHeight, TOD thisTOD, Season thisSeason)
+        public WSWD_Dist GetWS_WD_Dist(double thisHeight, TOD thisTOD, Season thisSeason, bool isLT_Est)
         {
             WSWD_Dist thisDist = new WSWD_Dist();
 
             for (int i = 0; i < WSWD_DistCount; i++)
-                if (WSWD_Dists[i].height == thisHeight && WSWD_Dists[i].timeOfDay == thisTOD && WSWD_Dists[i].season == thisSeason)
+                if (WSWD_Dists[i].height == thisHeight && WSWD_Dists[i].timeOfDay == thisTOD && WSWD_Dists[i].season == thisSeason && WSWD_Dists[i].isLT_Est == isLT_Est)
                     thisDist = WSWD_Dists[i];
             
             return thisDist;
         }        
 
         /// <summary> Gets index of WS/WD distribution for specified height, time of day, and season  </summary>
-        public int GetWS_WD_DistInd(double thisHeight, TOD thisTOD, Season thisSeason)
+        public int GetWS_WD_DistInd(double thisHeight, TOD thisTOD, Season thisSeason, bool isLT_Est)
         {
             int thisInd = 0;
 
@@ -480,6 +482,7 @@ namespace ContinuumNS
         public WSWD_Dist CalcLT_WSWD_Dists(double thisHeight, TOD thisTOD, Season thisSeason, Continuum thisInst, MCP thisMCP)
         {            
             WSWD_Dist thisDist = new WSWD_Dist();
+            thisDist.isLT_Est = true;
             thisDist.height = thisHeight;
             thisDist.timeOfDay = thisTOD;
             thisDist.season = thisSeason;            
@@ -557,6 +560,7 @@ namespace ContinuumNS
         public WSWD_Dist CalcMeas_WSWD_Dists(double thisHeight, TOD thisTOD, Season thisSeason, Continuum thisInst, Met_Data_Filter.Sim_TS extrapData)
         {
             WSWD_Dist thisDist = new WSWD_Dist();
+            thisDist.isLT_Est = false;
             thisDist.height = thisHeight;
             thisDist.timeOfDay = thisTOD;
             thisDist.season = thisSeason;

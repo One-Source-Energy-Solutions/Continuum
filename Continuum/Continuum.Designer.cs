@@ -83,6 +83,8 @@ namespace ContinuumNS
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Continuum));
             this.tabContinuum = new System.Windows.Forms.TabControl();
             this.pgeInput = new System.Windows.Forms.TabPage();
+            this.btnExportWR_DirRatios = new System.Windows.Forms.Button();
+            this.cboShowMeasOrLT = new System.Windows.Forms.ComboBox();
             this.lblMetDataType = new System.Windows.Forms.Label();
             this.btnImportMetData = new System.Windows.Forms.Button();
             this.plotDirectionalWS_Ratios = new OxyPlot.WindowsForms.PlotView();
@@ -343,7 +345,7 @@ namespace ContinuumNS
             this.label151 = new System.Windows.Forms.Label();
             this.pgeMCP = new System.Windows.Forms.TabPage();
             this.btnEditMetsUsedForDebias = new System.Windows.Forms.Button();
-            this.textBox1 = new System.Windows.Forms.TextBox();
+            this.txtDebiasUsingMets = new System.Windows.Forms.TextBox();
             this.chkUsingMetsForDebias = new System.Windows.Forms.CheckBox();
             this.txtDebiasRSq = new System.Windows.Forms.TextBox();
             this.label254 = new System.Windows.Forms.Label();
@@ -1366,6 +1368,8 @@ namespace ContinuumNS
             // pgeInput
             // 
             this.pgeInput.AutoScroll = true;
+            this.pgeInput.Controls.Add(this.btnExportWR_DirRatios);
+            this.pgeInput.Controls.Add(this.cboShowMeasOrLT);
             this.pgeInput.Controls.Add(this.lblMetDataType);
             this.pgeInput.Controls.Add(this.btnImportMetData);
             this.pgeInput.Controls.Add(this.plotDirectionalWS_Ratios);
@@ -1421,6 +1425,32 @@ namespace ContinuumNS
             this.pgeInput.TabIndex = 0;
             this.pgeInput.Text = "Input";
             this.pgeInput.UseVisualStyleBackColor = true;
+            // 
+            // btnExportWR_DirRatios
+            // 
+            this.btnExportWR_DirRatios.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.btnExportWR_DirRatios.Font = new System.Drawing.Font("Palatino Linotype", 9.5F);
+            this.btnExportWR_DirRatios.Location = new System.Drawing.Point(373, 447);
+            this.btnExportWR_DirRatios.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.btnExportWR_DirRatios.Name = "btnExportWR_DirRatios";
+            this.btnExportWR_DirRatios.Size = new System.Drawing.Size(104, 28);
+            this.btnExportWR_DirRatios.TabIndex = 156;
+            this.btnExportWR_DirRatios.Text = "Export Roses";
+            this.btnExportWR_DirRatios.UseVisualStyleBackColor = true;
+            this.btnExportWR_DirRatios.Click += new System.EventHandler(this.btnExportWR_DirRatios_Click);
+            // 
+            // cboShowMeasOrLT
+            // 
+            this.cboShowMeasOrLT.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.cboShowMeasOrLT.FormattingEnabled = true;
+            this.cboShowMeasOrLT.Items.AddRange(new object[] {
+            "Meas.",
+            "LT"});
+            this.cboShowMeasOrLT.Location = new System.Drawing.Point(155, 451);
+            this.cboShowMeasOrLT.Name = "cboShowMeasOrLT";
+            this.cboShowMeasOrLT.Size = new System.Drawing.Size(96, 21);
+            this.cboShowMeasOrLT.TabIndex = 154;
+            this.cboShowMeasOrLT.SelectedIndexChanged += new System.EventHandler(this.cboShowMeasOrLT_SelectedIndexChanged);
             // 
             // lblMetDataType
             // 
@@ -2412,7 +2442,7 @@ namespace ContinuumNS
             this.plotTS_Baros.Location = new System.Drawing.Point(28, 537);
             this.plotTS_Baros.Name = "plotTS_Baros";
             this.plotTS_Baros.PanCursor = System.Windows.Forms.Cursors.Hand;
-            this.plotTS_Baros.Size = new System.Drawing.Size(854, 155);
+            this.plotTS_Baros.Size = new System.Drawing.Size(812, 155);
             this.plotTS_Baros.TabIndex = 24;
             this.plotTS_Baros.Text = "plotTS_Anems";
             this.plotTS_Baros.ZoomHorizontalCursor = System.Windows.Forms.Cursors.SizeWE;
@@ -2636,7 +2666,7 @@ namespace ContinuumNS
             this.plotTS_Temp.Location = new System.Drawing.Point(28, 382);
             this.plotTS_Temp.Name = "plotTS_Temp";
             this.plotTS_Temp.PanCursor = System.Windows.Forms.Cursors.Hand;
-            this.plotTS_Temp.Size = new System.Drawing.Size(854, 155);
+            this.plotTS_Temp.Size = new System.Drawing.Size(812, 155);
             this.plotTS_Temp.TabIndex = 2;
             this.plotTS_Temp.Text = "plotTS_Anems";
             this.plotTS_Temp.ZoomHorizontalCursor = System.Windows.Forms.Cursors.SizeWE;
@@ -2651,7 +2681,7 @@ namespace ContinuumNS
             this.plotTS_Vanes.Location = new System.Drawing.Point(28, 227);
             this.plotTS_Vanes.Name = "plotTS_Vanes";
             this.plotTS_Vanes.PanCursor = System.Windows.Forms.Cursors.Hand;
-            this.plotTS_Vanes.Size = new System.Drawing.Size(854, 155);
+            this.plotTS_Vanes.Size = new System.Drawing.Size(812, 155);
             this.plotTS_Vanes.TabIndex = 1;
             this.plotTS_Vanes.Text = "plotTS_Anems";
             this.plotTS_Vanes.ZoomHorizontalCursor = System.Windows.Forms.Cursors.SizeWE;
@@ -2666,7 +2696,7 @@ namespace ContinuumNS
             this.plotTS_Anems.Location = new System.Drawing.Point(28, 72);
             this.plotTS_Anems.Name = "plotTS_Anems";
             this.plotTS_Anems.PanCursor = System.Windows.Forms.Cursors.Hand;
-            this.plotTS_Anems.Size = new System.Drawing.Size(854, 155);
+            this.plotTS_Anems.Size = new System.Drawing.Size(812, 155);
             this.plotTS_Anems.TabIndex = 0;
             this.plotTS_Anems.ZoomHorizontalCursor = System.Windows.Forms.Cursors.SizeWE;
             this.plotTS_Anems.ZoomRectangleCursor = System.Windows.Forms.Cursors.SizeNWSE;
@@ -4682,7 +4712,7 @@ namespace ContinuumNS
             // 
             this.pgeMCP.AutoScroll = true;
             this.pgeMCP.Controls.Add(this.btnEditMetsUsedForDebias);
-            this.pgeMCP.Controls.Add(this.textBox1);
+            this.pgeMCP.Controls.Add(this.txtDebiasUsingMets);
             this.pgeMCP.Controls.Add(this.chkUsingMetsForDebias);
             this.pgeMCP.Controls.Add(this.txtDebiasRSq);
             this.pgeMCP.Controls.Add(this.label254);
@@ -4806,16 +4836,16 @@ namespace ContinuumNS
             this.btnEditMetsUsedForDebias.UseVisualStyleBackColor = true;
             this.btnEditMetsUsedForDebias.Click += new System.EventHandler(this.btnEditMetsUsedForDebias_Click);
             // 
-            // textBox1
+            // txtDebiasUsingMets
             // 
-            this.textBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBox1.Font = new System.Drawing.Font("Palatino Linotype", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.textBox1.Location = new System.Drawing.Point(942, 356);
-            this.textBox1.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.textBox1.Name = "textBox1";
-            this.textBox1.ReadOnly = true;
-            this.textBox1.Size = new System.Drawing.Size(278, 22);
-            this.textBox1.TabIndex = 323;
+            this.txtDebiasUsingMets.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtDebiasUsingMets.Font = new System.Drawing.Font("Palatino Linotype", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.txtDebiasUsingMets.Location = new System.Drawing.Point(942, 356);
+            this.txtDebiasUsingMets.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.txtDebiasUsingMets.Name = "txtDebiasUsingMets";
+            this.txtDebiasUsingMets.ReadOnly = true;
+            this.txtDebiasUsingMets.Size = new System.Drawing.Size(278, 22);
+            this.txtDebiasUsingMets.TabIndex = 323;
             // 
             // chkUsingMetsForDebias
             // 
@@ -4848,9 +4878,9 @@ namespace ContinuumNS
             this.label254.Font = new System.Drawing.Font("Palatino Linotype", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label254.Location = new System.Drawing.Point(916, 327);
             this.label254.Name = "label254";
-            this.label254.Size = new System.Drawing.Size(24, 16);
+            this.label254.Size = new System.Drawing.Size(20, 16);
             this.label254.TabIndex = 319;
-            this.label254.Text = "R² :";
+            this.label254.Text = "R :";
             // 
             // txtDebiasIntercept
             // 
@@ -9273,7 +9303,7 @@ namespace ContinuumNS
             this.dataTurbulence.Name = "dataTurbulence";
             this.dataTurbulence.ReadOnly = true;
             this.dataTurbulence.RowHeadersVisible = false;
-            this.dataTurbulence.Size = new System.Drawing.Size(217, 565);
+            this.dataTurbulence.Size = new System.Drawing.Size(217, 600);
             this.dataTurbulence.TabIndex = 294;
             // 
             // Column93
@@ -9906,7 +9936,7 @@ namespace ContinuumNS
             // btnExportExtremeWSTable
             // 
             this.btnExportExtremeWSTable.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.btnExportExtremeWSTable.Location = new System.Drawing.Point(842, 667);
+            this.btnExportExtremeWSTable.Location = new System.Drawing.Point(359, 581);
             this.btnExportExtremeWSTable.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.btnExportExtremeWSTable.Name = "btnExportExtremeWSTable";
             this.btnExportExtremeWSTable.Size = new System.Drawing.Size(120, 46);
@@ -10203,7 +10233,7 @@ namespace ContinuumNS
             this.plotExtremeWS_TS.Location = new System.Drawing.Point(921, 17);
             this.plotExtremeWS_TS.Name = "plotExtremeWS_TS";
             this.plotExtremeWS_TS.PanCursor = System.Windows.Forms.Cursors.Hand;
-            this.plotExtremeWS_TS.Size = new System.Drawing.Size(510, 350);
+            this.plotExtremeWS_TS.Size = new System.Drawing.Size(510, 303);
             this.plotExtremeWS_TS.TabIndex = 293;
             this.plotExtremeWS_TS.Text = "plotView1";
             this.plotExtremeWS_TS.ZoomHorizontalCursor = System.Windows.Forms.Cursors.SizeWE;
@@ -10226,7 +10256,7 @@ namespace ContinuumNS
             this.dataExtremeWS.Location = new System.Drawing.Point(359, 17);
             this.dataExtremeWS.Name = "dataExtremeWS";
             this.dataExtremeWS.RowHeadersWidth = 51;
-            this.dataExtremeWS.Size = new System.Drawing.Size(548, 650);
+            this.dataExtremeWS.Size = new System.Drawing.Size(548, 557);
             this.dataExtremeWS.TabIndex = 292;
             // 
             // Column17
@@ -10314,10 +10344,10 @@ namespace ContinuumNS
             // 
             this.plotExtremeWS.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.plotExtremeWS.Location = new System.Drawing.Point(921, 317);
+            this.plotExtremeWS.Location = new System.Drawing.Point(921, 316);
             this.plotExtremeWS.Name = "plotExtremeWS";
             this.plotExtremeWS.PanCursor = System.Windows.Forms.Cursors.Hand;
-            this.plotExtremeWS.Size = new System.Drawing.Size(510, 350);
+            this.plotExtremeWS.Size = new System.Drawing.Size(510, 303);
             this.plotExtremeWS.TabIndex = 287;
             this.plotExtremeWS.Text = "plotView1";
             this.plotExtremeWS.ZoomHorizontalCursor = System.Windows.Forms.Cursors.SizeWE;
@@ -10336,7 +10366,7 @@ namespace ContinuumNS
             // btnExtremeWS
             // 
             this.btnExtremeWS.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.btnExtremeWS.Location = new System.Drawing.Point(916, 967);
+            this.btnExtremeWS.Location = new System.Drawing.Point(485, 581);
             this.btnExtremeWS.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.btnExtremeWS.Name = "btnExtremeWS";
             this.btnExtremeWS.Size = new System.Drawing.Size(120, 46);
@@ -15414,9 +15444,11 @@ namespace ContinuumNS
         private Label label252;
         public TextBox txtDebiasRSq;
         private Label label254;
-        public TextBox textBox1;
+        public TextBox txtDebiasUsingMets;
         public CheckBox chkUsingMetsForDebias;
         private Button btnEditMetsUsedForDebias;
+        public ComboBox cboShowMeasOrLT;
+        internal Button btnExportWR_DirRatios;
     }
 }
 

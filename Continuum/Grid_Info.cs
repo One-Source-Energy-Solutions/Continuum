@@ -118,7 +118,7 @@ namespace ContinuumNS
 
             double dirBinSize = (double)360 / thisInst.metList.numWD;
             
-            double[] windRose = thisInst.metList.GetAvgWindRose(thisInst.modeledHeight, Met.TOD.All, Met.Season.All);
+            double[] windRose = thisInst.metList.GetAvgWindRose(thisInst.modeledHeight, Met.TOD.All, Met.Season.All, thisInst.metList.allMCPd);
 
             if (windRose == null)            
                 windRose = thisInst.refList.CalcAvgWindRose(thisInst.UTM_conversions, thisInst.metList.numWD);                           

@@ -120,6 +120,7 @@ namespace ContinuumNS
             int numWD = thisInst.metList.numWD;
             int numNodes = 0;
             NodeCollection nodeList = new NodeCollection();
+            bool useLT_Est = thisInst.metList.allMCPd;
 
             if (WS_Pred[crossPredInd, radiusIndex].nodePath == null)
                 numNodes = 0;
@@ -139,8 +140,8 @@ namespace ContinuumNS
             Model thisModel = WS_Pred[crossPredInd, radiusIndex].model;
 
             // Get WS distributions at each site (used to calculate the cross-prediction percent error)
-            Met.WSWD_Dist met1Dist = met1.GetWS_WD_Dist(thisInst.modeledHeight, thisModel.timeOfDay, thisModel.season);
-            Met.WSWD_Dist met2Dist = met2.GetWS_WD_Dist(thisInst.modeledHeight, thisModel.timeOfDay, thisModel.season);
+            Met.WSWD_Dist met1Dist = met1.GetWS_WD_Dist(thisInst.modeledHeight, thisModel.timeOfDay, thisModel.season, useLT_Est);
+            Met.WSWD_Dist met2Dist = met2.GetWS_WD_Dist(thisInst.modeledHeight, thisModel.timeOfDay, thisModel.season, useLT_Est);
 
             // Conduct cross-prediction from Met 1 to Met 2
             Nodes endNode = nodeList.GetMetNode(met2);
@@ -164,7 +165,7 @@ namespace ContinuumNS
                 avgWS = 0;
                 WR_count = 0;
                 Nodes thisNode = WS_Pred[crossPredInd, radiusIndex].nodePath[nodeInd];
-                double[] nodeWindRose = thisInst.metList.GetInterpolatedWindRose(thisModel.metsUsed, thisNode.UTMX, thisNode.UTMY, thisModel.timeOfDay, thisModel.season, thisInst.modeledHeight);
+                double[] nodeWindRose = thisInst.metList.GetInterpolatedWindRose(thisModel.metsUsed, thisNode.UTMX, thisNode.UTMY, thisModel.timeOfDay, thisModel.season, thisInst.modeledHeight, useLT_Est);
 
                 for (int WD_Ind = 0; WD_Ind < numWD; WD_Ind++) {
                     avgWS = avgWS + nodeWindRose[WD_Ind] * WS_Pred[crossPredInd, radiusIndex].nodeSectorWS_Ests1to2[nodeInd, WD_Ind];
@@ -218,7 +219,7 @@ namespace ContinuumNS
                 avgWS = 0;
                 WR_count = 0;
                 Nodes thisNode = pathOfNodes[nodeInd];
-                double[] nodeWindRose = thisInst.metList.GetInterpolatedWindRose(thisModel.metsUsed, thisNode.UTMX, thisNode.UTMY, thisModel.timeOfDay, thisModel.season, thisInst.modeledHeight);
+                double[] nodeWindRose = thisInst.metList.GetInterpolatedWindRose(thisModel.metsUsed, thisNode.UTMX, thisNode.UTMY, thisModel.timeOfDay, thisModel.season, thisInst.modeledHeight, useLT_Est);
 
                 for (int WD_Ind = 0; WD_Ind < numWD; WD_Ind++) {
                     avgWS = avgWS + nodeWindRose[WD_Ind] * WS_Pred[crossPredInd, radiusIndex].nodeSectorWS_Ests2to1[nodeInd, WD_Ind];
