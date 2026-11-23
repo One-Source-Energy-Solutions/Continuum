@@ -897,12 +897,6 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_62AF72A96B884666A21928D46B0DA3BA"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
         "MsmKey" = "8:_62E472EC1A5D42558BB77DE0CF6B40DB"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -1677,6 +1671,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_C6FF046B11F54045A737B9E9BBFABDE3"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_C7C48FAAA3CB4A4AACC3AF7854CFF5F8"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -1858,6 +1858,12 @@
         "Entry"
         {
         "MsmKey" = "8:_E1E15899DC7F4B6B92F675284EFF46F4"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_E2F5460DDACF4CBFAF92843B3964420B"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -3010,7 +3016,7 @@
                 {
                 "Name" = "8:.NET Framework"
                 "Message" = "8:[VSDNETMSG]"
-                "FrameworkVersion" = "8:v4.6.1               "
+                "FrameworkVersion" = "8:v4.6.1                "
                 "AllowLaterVersions" = "11:FALSE"
                 "InstallUrl" = "8:http://go.microsoft.com/fwlink/?LinkId=671728"
                 }
@@ -6342,26 +6348,6 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_62AF72A96B884666A21928D46B0DA3BA"
-            {
-            "SourcePath" = "8:..\\Continuum\\Continuum icon no bg.ico"
-            "TargetName" = "8:Continuum icon no bg.ico"
-            "Tag" = "8:"
-            "Folder" = "8:_C1636710D96745019CA29B0633DEE339"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_62E472EC1A5D42558BB77DE0CF6B40DB"
             {
             "SourcePath" = "8:..\\Continuum\\bin\\Debug\\gdal\\data\\netcdf_config.xsd"
@@ -9214,6 +9200,26 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_C6FF046B11F54045A737B9E9BBFABDE3"
+            {
+            "SourcePath" = "8:..\\..\\..\\..\\One Source Energy Solutions\\One Source Energy Solutions - Files\\Research & Development\\Wind\\Continuum\\Logos\\Continuum_Icon_Original_Artwork_OvalMask.ico"
+            "TargetName" = "8:Continuum_Icon_Original_Artwork_OvalMask.ico"
+            "Tag" = "8:"
+            "Folder" = "8:_C1636710D96745019CA29B0633DEE339"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_C7C48FAAA3CB4A4AACC3AF7854CFF5F8"
             {
             "SourcePath" = "8:..\\Continuum\\bin\\Debug\\gdal\\data\\jpfgdgml_SBAPt.gfs"
@@ -9921,6 +9927,26 @@
             "TargetName" = "8:libmysql.dll"
             "Tag" = "8:"
             "Folder" = "8:_5E237ECBEC7B4B3DA75B4A7EB2A17E29"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_E2F5460DDACF4CBFAF92843B3964420B"
+            {
+            "SourcePath" = "8:..\\..\\..\\..\\One Source Energy Solutions\\One Source Energy Solutions - Files\\Research & Development\\Wind\\Continuum\\Logos\\Continuum-icon.ico"
+            "TargetName" = "8:Continuum-icon.ico"
+            "Tag" = "8:"
+            "Folder" = "8:_C1636710D96745019CA29B0633DEE339"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -10782,7 +10808,7 @@
             "Description" = "8:"
             "Extensions" = "8:.CFM"
             "MIME" = "8:"
-            "Icon" = "8:_62AF72A96B884666A21928D46B0DA3BA"
+            "Icon" = "8:_C6FF046B11F54045A737B9E9BBFABDE3"
             "IconIndex" = "3:0"
                 "Command"
                 {
@@ -10919,7 +10945,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:Continuum Wind Energy Software"
         "ProductCode" = "8:{F5CADA1C-91D2-422B-A654-605A275F902A}"
-        "PackageCode" = "8:{F899CBE9-4675-48F0-9641-5F0FD2E2A914}"
+        "PackageCode" = "8:{3B7E728B-D978-4067-A4C7-484E2936005A}"
         "UpgradeCode" = "8:{C6A3FCE0-9B67-4431-889A-452DDBE71C27}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
@@ -11036,7 +11062,7 @@
             "Target" = "8:_C8B6C30423D747E5A1B4871C79CF62E9"
             "Folder" = "8:_8F3AD0CA52D341E9AFE9555B6CCF2EBF"
             "WorkingFolder" = "8:_C1636710D96745019CA29B0633DEE339"
-            "Icon" = "8:_62AF72A96B884666A21928D46B0DA3BA"
+            "Icon" = "8:_C6FF046B11F54045A737B9E9BBFABDE3"
             "Feature" = "8:"
             }
             "{970C0BB2-C7D0-45D7-ABFA-7EC378858BC0}:_FD927C3034D448EF8798CC54DE9E7AFD"
@@ -11050,7 +11076,7 @@
             "Target" = "8:_C8B6C30423D747E5A1B4871C79CF62E9"
             "Folder" = "8:_81EC8E57F416499E8D822DDA9AA3A103"
             "WorkingFolder" = "8:_C1636710D96745019CA29B0633DEE339"
-            "Icon" = "8:_62AF72A96B884666A21928D46B0DA3BA"
+            "Icon" = "8:_C6FF046B11F54045A737B9E9BBFABDE3"
             "Feature" = "8:"
             }
         }

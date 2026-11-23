@@ -6668,7 +6668,7 @@ namespace ContinuumNS
         private void showHelpToolStripMenuItem_Click(object sender, EventArgs e)
         {
             // Opens web browser with tutorials
-            string tutorialURL = "https://www.continuumwind.com/tutorials";
+            string tutorialURL = "https://www.continuumwind.com/learn";
             Process.Start(new ProcessStartInfo
             {
                 FileName = tutorialURL,

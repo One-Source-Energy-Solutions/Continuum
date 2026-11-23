@@ -654,7 +654,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Continuum full logo with R.png" />
-    <Content Include="Continuum icon no bg.ico" />
     <Content Include="Properties\Continuum full logo.png" />
     <Content Include="Continuum logo.ico" />
     <Content Include="ERA5_ARCO_Downloader.py">
