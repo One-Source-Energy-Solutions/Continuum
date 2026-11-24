@@ -11440,7 +11440,7 @@ namespace ContinuumNS
             int turbineCount = thisInst.turbineList.TurbineCount;
             int wsDecimals = ContinuumStyle.GetNumDecimals("WS");
             int energyDecimals = ContinuumStyle.GetNumDecimals("Energy");
-            int wakeDecimals = ContinuumStyle.GetNumDecimals("Wake", true);
+            int wakeDecimals = ContinuumStyle.GetNumDecimals("Wake", false);
 
             // Get estimates once for each turbine
             Turbine.Avg_Est[] avgEsts = new Turbine.Avg_Est[turbineCount];
@@ -11482,7 +11482,7 @@ namespace ContinuumNS
                 double farmGrossEnergy = 0;
                 double farmNetEnergy = 0;
 
-                int colInd = 1;                               
+                int colInd = 5;                               
 
                 for (int t = 0; t < turbineCount; t++)
                 {
@@ -11505,7 +11505,10 @@ namespace ContinuumNS
                     rowData[colInd + 1] =Math.Round(grossEnergy, energyDecimals);
               //      rowData[colInd + 2] =Math.Round(wakedWS, wsDecimals);
                     rowData[colInd + 2] =Math.Round(netEnergy, energyDecimals);
-                    double wakeLoss =(grossEnergy - netEnergy / otherLoss) /grossEnergy;
+                    double wakeLoss = 0;
+                    
+                    if (grossEnergy > 0)
+                        wakeLoss = (grossEnergy - netEnergy / otherLoss) / grossEnergy;
                     rowData[colInd + 3] =Math.Round(100.0 * wakeLoss, wakeDecimals);
 
                     colInd += numParams;
@@ -11680,7 +11683,15 @@ namespace ContinuumNS
 
                             for (int r = startInd; r < endInd; r++)
                             {
-                                double thisVal = Convert.ToDouble(thisInst.dataWTG_TimeSeriesEsts.Rows[r].Cells[colInd].Value);
+                                if (thisInst.dataWTG_TimeSeriesEsts.Rows[r].Cells[colInd].Value == null)
+                                    continue;
+
+                                double thisVal = 0;
+
+                                double.TryParse(thisInst.dataWTG_TimeSeriesEsts.Rows[r].Cells[colInd].Value.ToString(), out thisVal);
+
+                                if (thisVal == 0)
+                                    continue;
 
                                 if (analysisType.Contains("Time Series"))
                                 {
