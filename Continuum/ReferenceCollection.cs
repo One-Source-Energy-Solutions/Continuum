@@ -1047,7 +1047,7 @@ namespace ContinuumNS
                 if (thisDataDownload.refType == refDataDownloads[r].refType && thisDataDownload.minLat == refDataDownloads[r].minLat &&
                     thisDataDownload.maxLat == refDataDownloads[r].maxLat && thisDataDownload.minLon == refDataDownloads[r].minLon
                     && thisDataDownload.maxLon == refDataDownloads[r].maxLon && thisDataDownload.incl10mWS == refDataDownloads[r].incl10mWS &&
-                    thisDataDownload.incl10mGust == refDataDownloads[r].incl10mGust)
+                    thisDataDownload.incl10mGust == refDataDownloads[r].incl10mGust && thisDataDownload.monthlyOrDaily == refDataDownloads[r].monthlyOrDaily)
                 {
                     gotIt = true;
                     break;

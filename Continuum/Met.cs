@@ -1172,7 +1172,7 @@ namespace ContinuumNS
                             maxWS = anem1.windData[i].avg;
                         if (gotAnem2) 
                             if (anem2.windData[i].avg > maxWS)
-                                maxWS = anem1.windData[i].avg;
+                                maxWS = anem2.windData[i].avg;
                     }
                     else
                     {
@@ -1180,7 +1180,7 @@ namespace ContinuumNS
                             maxWS = anem1.windData[i].max;
                         if (gotAnem2)
                             if (anem2.windData[i].max > maxWS)
-                                maxWS = anem1.windData[i].max;
+                                maxWS = anem2.windData[i].max;
                     }
                 }
                 else
@@ -1206,14 +1206,14 @@ namespace ContinuumNS
                         maxWS = anem1.windData[i].avg;
                         if (gotAnem2)
                             if (anem2.windData[i].avg > maxWS)
-                                maxWS = anem1.windData[i].avg;
+                                maxWS = anem2.windData[i].avg;
                     }
                     else
                     {
                         maxWS = anem1.windData[i].max;
                         if (gotAnem2)
                             if (anem2.windData[i].max > maxWS)
-                                maxWS = anem1.windData[i].max;
+                                maxWS = anem2.windData[i].max;
                     }
 
                     lastYear = thisYear;

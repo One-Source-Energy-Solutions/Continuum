@@ -5351,15 +5351,32 @@ namespace ContinuumNS
 
                     if (fileExists == false)
                     {
-                        string pythonPath = Environment.GetEnvironmentVariable("python") + "\\python.exe";
+                        // Get Python installation directory from environment variable
+                        string pythonInstallDir = Environment.GetEnvironmentVariable("python");
 
-                        string pythonScript = "ERA5_Downloader.py \"" + refData.folderLocation + "\" " + thisDate.Year + " " + thisDate.Month + " "
+                        if (string.IsNullOrWhiteSpace(pythonInstallDir))
+                            throw new Exception("Python environment variable is not configured.");
+
+                        // Full path to Python executable
+                        string pythonPath = Path.Combine(pythonInstallDir, "python.exe");
+
+                        // Full path to downloader script
+                        string scriptPath = Path.Combine(AppContext.BaseDirectory, "ERA5_Downloader.py");
+
+                        // Verify both files exist
+                        if (!File.Exists(pythonPath))
+                            throw new FileNotFoundException("Python executable not found.", pythonPath);
+
+                        if (!File.Exists(scriptPath))
+                            throw new FileNotFoundException("ERA5 downloader script not found.", scriptPath);                       
+
+                        string pythonScript = scriptPath + " \"" + refData.folderLocation + "\" " + thisDate.Year + " " + thisDate.Month + " "
                             + thisDate.Day + " " + minLat.ToString() + " " + maxLat.ToString() + " " + minLong.ToString() + " " + maxLong.ToString() + " " + incl10mWS.ToString() + " " + incl10mGust.ToString();
 
                         Debug.WriteLine(pythonScript);
                         ProcessStartInfo start = new ProcessStartInfo();
                         start.WorkingDirectory = Directory.GetCurrentDirectory();
-                        start.FileName = "python";
+                        start.FileName = pythonPath;
                         start.Arguments = pythonScript;
                         start.UseShellExecute = false;
                         start.RedirectStandardOutput = true;
@@ -5418,15 +5435,32 @@ namespace ContinuumNS
 
                     if (fileExists == false)
                     {
-                        //string pythonPath = Environment.GetEnvironmentVariable("python") + "\\python.exe";
+                        // Get Python installation directory from environment variable
+                        string pythonInstallDir = Environment.GetEnvironmentVariable("python");
 
-                        string pythonScript = "ERA5_MonthlyDownloader.py \"" + refData.folderLocation + "\" " + thisDate.Year + " " + thisDate.Month + " "
+                        if (string.IsNullOrWhiteSpace(pythonInstallDir))
+                            throw new Exception("Python environment variable is not configured.");
+
+                        // Full path to Python executable
+                        string pythonPath = Path.Combine(pythonInstallDir, "python.exe");
+
+                        // Full path to downloader script
+                        string scriptPath = Path.Combine(AppContext.BaseDirectory, "ERA5_MonthlyDownloader.py");
+
+                        // Verify both files exist
+                        if (!File.Exists(pythonPath))
+                            throw new FileNotFoundException("Python executable not found.", pythonPath);
+
+                        if (!File.Exists(scriptPath))
+                            throw new FileNotFoundException("ERA5 downloader script not found.", scriptPath);
+
+                        string pythonScript = scriptPath + " \"" + refData.folderLocation + "\" " + thisDate.Year + " " + thisDate.Month + " "
                             + " " + minLat.ToString() + " " + maxLat.ToString() + " " + minLong.ToString() + " " + maxLong.ToString() + " " + incl10mWS.ToString() + " " + incl10mGust.ToString();
 
                         Debug.WriteLine(pythonScript);
                         ProcessStartInfo start = new ProcessStartInfo();
                         start.WorkingDirectory = Directory.GetCurrentDirectory();
-                        start.FileName = "python";
+                        start.FileName = pythonPath;
                         start.Arguments = pythonScript;
                         start.UseShellExecute = false;
                         start.RedirectStandardOutput = true;
